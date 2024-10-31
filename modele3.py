@@ -59,6 +59,10 @@ width_window, height_window = pygame.display.get_surface().get_size()
 centre_x = width_window // 2
 centre_y = height_window // 2
 
+def scale_value(value, screen_width):
+    # Exemple d'échelle, ajustez le facteur comme nécessaire
+    return int(value * (screen_width / 1920))  # 1920 peut être la largeur de référence
+
 class Bouton:
     # dessiner un bouton
     def dessiner_bouton(surface, txt, rect, couleur):
@@ -115,8 +119,8 @@ class Meteorite:
         self.x = random.randint(0, width_window)
         self.y = 0
         self.vitesse_y = random.uniform(5, 10)  # vitesse verticale
-        self.vitesse_x = -random.uniform(2, 5)   # vitesse horizontale
-        self.taille = random.randint(2, 5)
+        self.vitesse_x = random.uniform(-5, 5)   # vitesse horizontale
+        self.taille = random.randint(1, 2)
 
     def mouvement(self):
         # faaire descendre la meteorite
@@ -129,14 +133,18 @@ class Meteorite:
 
 # Classe Planete
 class Planet:
-    def __init__(self, color, rayon_x, rayon_y, speed, size):
+    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, diametre, population, info=""):
+        self.nom = nom
         self.color = color
         self.rayon_x = rayon_x
         self.rayon_y = rayon_y
         self.speed = speed
         self.size = size
+        self.diametre = diametre  # Ajout du diamètre
+        self.population = population  # Ajout de la population
         self.angle = 0
-
+        self.info = info.split("|")  # On garde les retours à la ligne
+        
     def mouvP(self, en_pause):
         #deplacement des planetes si pas en pause
         if not en_pause:
@@ -147,10 +155,41 @@ class Planet:
     def drawP(self, surface):
         #affiche les planetes
         pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.size)
+        
+    def survole(self, pos_souris):
+        distance = math.hypot(pos_souris[0] - self.x, pos_souris[1] - self.y)
+        return distance <= self.size
+    
+    def afficher_info(self, surface, pos_souris):
+        font = pygame.font.SysFont("comicsansms", 20)
+        padding = 10  # Espacement entre le texte et les bords du pop-up
+        
+        # Contenu des informations avec le diamètre et la population
+        info_lines = [
+            f"Nom: {self.nom}",
+            f"Diamètre: {self.diametre} km",
+            f"Population: {self.population}",
+        ] + self.info  # On ajoute les autres infos
+        
+        # Calcul de la largeur et hauteur du rectangle en fonction du contenu
+        max_line_width = max(font.size(line)[0] for line in info_lines) + 2 * padding
+        line_height = font.get_height()
+        rect_height = line_height * len(info_lines) + 2 * padding
+        rect_x, rect_y = pos_souris[0] + 10, pos_souris[1] + 10
+
+        # Dessiner le fond du pop-up
+        pygame.draw.rect(surface, WHITE, (rect_x, rect_y, max_line_width, rect_height))
+        pygame.draw.rect(surface, BLACK, (rect_x, rect_y, max_line_width, rect_height), 2)  # Bordure noire
+
+        # Afficher chaque ligne de texte avec un point en début
+        for i, line in enumerate(info_lines):
+            texte = font.render(f"• {line}", True, BLACK)
+            surface.blit(texte, (rect_x + padding, rect_y + padding + i * line_height))
 
 # Classe Satellite 
 class Satellite:
-    def __init__(self, color, rayon_x, rayon_y, speed, size, planet_parent):
+    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, planet_parent, diametre, population, info=""):
+        self.nom = nom
         self.color = color
         self.rayon_x = rayon_x
         self.rayon_y = rayon_y
@@ -158,6 +197,9 @@ class Satellite:
         self.size = size
         self.angle = 0
         self.planet_parent = planet_parent
+        self.diametre = diametre  # Ajout du diamètre
+        self.population = population  # Ajout de la population
+        self.info = info.split("|")
 
     def mouvS(self,en_pause):
         #mouvement des sattelites si pas en pause
@@ -169,6 +211,43 @@ class Satellite:
     def drawS(self, surface):
         #affiche les satellittes
         pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.size)
+
+    def survole(self, pos_souris):
+        distance = math.hypot(pos_souris[0] - self.x, pos_souris[1] - self.y)
+        return distance <= self.size
+    
+    def afficher_info(self, surface, pos_souris):
+        font = pygame.font.SysFont("comicsansms", 20)
+        padding = 10  # Espacement entre le texte et les bords du pop-up
+        
+        # Contenu des informations avec le diamètre et la population
+        info_lines = [
+            f"Nom: {self.nom}",
+            f"Diamètre: {self.diametre} km",
+            f"Population: {self.population}",
+        ] + self.info
+        
+        # Contenu des informations avec le diamètre et la population
+        info_lines = [
+            f"Nom: {self.nom}",
+            f"Diamètre: {self.diametre} km",
+            f"Population: {self.population}",
+        ] + self.info  # On ajoute les autres infos
+
+        # Calcul de la largeur et hauteur du rectangle en fonction du contenu
+        max_line_width = max(font.size(line)[0] for line in info_lines) + 2 * padding
+        line_height = font.get_height()
+        rect_height = line_height * len(info_lines) + 2 * padding
+        rect_x, rect_y = pos_souris[0] + 10, pos_souris[1] + 10
+
+        # Dessiner le fond du pop-up
+        pygame.draw.rect(surface, WHITE, (rect_x, rect_y, max_line_width, rect_height))
+        pygame.draw.rect(surface, BLACK, (rect_x, rect_y, max_line_width, rect_height), 2)  # Bordure noire
+
+        # Afficher chaque ligne de texte avec un point en début
+        for i, line in enumerate(info_lines):
+            texte = font.render(f"• {line}", True, BLACK)
+            surface.blit(texte, (rect_x + padding, rect_y + padding + i * line_height))
 
 #calsse eruptiobn solaire
 class eruptionSolaire:
@@ -268,32 +347,128 @@ class Lune:
         
         return phase
 
-    def dessiner_lune(visible,phase):
-        #affichage des phases de la lune
+    def dessiner_lune(visible, phase):
+        # Affichage des phases de la lune
         if visible:
-            pygame.draw.rect(window, WHITE, pygame.Rect(1250,50,300,300))
-            #affiche l'image de la phase
-            window.blit(image_lune[phase], (1260, 60))
+            # Définir une taille maximum pour la fenêtre de la lune
+            max_width = width_window - 100  # Laisser une marge de 50 pixels de chaque côté
+            max_height = height_window - 100  # Laisser une marge de 50 pixels en haut et en bas
+
+            # Fixer la taille de la fenêtre de la lune
+            rect_width = min(300, max_width)
+            rect_height = min(300, max_height)
+
+            # Positionner la fenêtre
+            pos_x = width_window - rect_width - 20  # Décalage de 20 pixels du bord droit
+            pos_y = 50  # Garder la position Y
+
+            pygame.draw.rect(window, WHITE, pygame.Rect(pos_x, pos_y, rect_width, rect_height))
+            # Affiche l'image de la phase, centrée dans la fenêtre
+            window.blit(image_lune[phase], (pos_x + 10, pos_y + 10))  # Ajuster la position de l'image
+
+class Asteroide:
+    
+        # Variables de configuration pour la ceinture d'astéroïdes
+    nombre_asteroides = 200  # Nombre d'astéroïdes dans la ceinture
+    distance_ceinture = scale_value(300, width_window)  # Distance de la ceinture par rapport au soleil
+    vitesse_rotation_ceinture = 0.001  # Vitesse de rotation de la ceinture
+
+
+    # Initialisation des astéroïdes avec des angles aléatoires et des distances fixes
+    asteroides = [{'angle': random.uniform(0, 2 * math.pi)} for _ in range(nombre_asteroides)]
+
+    def dessiner_ceinture_asteroides(surface, centre,asteroides,distance_ceinture,vitesse_rotation_ceinture):
+        for asteroide in asteroides:
+            # Mise à jour de l'angle pour créer une rotation
+            asteroide['angle'] += vitesse_rotation_ceinture
+            angle = asteroide['angle']
+            
+            # Calcul des positions X et Y en fonction de l'angle et de la distance
+            x = centre[0] + distance_ceinture * math.cos(angle)
+            y = centre[1] + distance_ceinture * math.sin(angle)
+            
+            # Dessiner chaque astéroïde comme un petit cercle
+            pygame.draw.circle(surface, (169, 169, 169), (int(x), int(y)), 2)  # Taille et couleur de l'astéroïde
+
+    
 
 # Fonction principale
 def main():
+        # Récupérer la largeur de la fenêtre
+    screen_width, screen_height = pygame.display.get_surface().get_size()
+
     # Créer le système solaire
     systeme_solaire = SystemeSolaire()
-
-    # ajoute des planètes
-    terre = Planet(BLUE, 220, 180, 0.029, 10)
-    mercure = Planet(GREY, 140, 100, 0.047, 4)
-    venus = Planet(ORANGE, 160, 140, 0.035, 9)
-    mars = Planet(RED, 300, 240, 0.024, 5)
     
+    #taille du soleil
+    size_sun = scale_value(100, screen_width)  # Taille du soleil à l'échelle
+    soleil = Planet("Soleil", YELLOW, scale_value(0, screen_width), scale_value(0, screen_width), 0, size_sun, 1392000, "0", "État: Gazeux | Temp: 5778 K")
+    systeme_solaire.add_planet(soleil)
+    
+    
+
+    #ajouter des palente
+    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C")
+    terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.029, scale_value(10, screen_width), 12742, "7,9 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C")
+    venus = Planet("Vénus", ORANGE, scale_value(size_sun + 195, screen_width), scale_value(180, screen_width), 0.035, scale_value(9, screen_width), 12104, "0", "Eau: 0% | Pression: 92 atm | Temp: 462°C")
+    mars = Planet("Mars", RED, scale_value(size_sun + 300, screen_width), scale_value(240, screen_width), 0.024, scale_value(5, screen_width), 6779, "0", "Eau: Traces | Pression: 0.006 atm | Temp: -125 à 20°C")
     systeme_solaire.add_planet(terre)
     systeme_solaire.add_planet(mercure)
     systeme_solaire.add_planet(venus)
     systeme_solaire.add_planet(mars)
 
-    # ajoute des satellites
-    lune = Satellite(GREY, 30, 22, 0.1, 3, terre)
+    # ajoute des planètes gazeuses
+    jupiter = Planet("Jupiter", (255, 165, 0), scale_value(450, screen_width), scale_value(300, screen_width), 0.013, scale_value(15, screen_width), 139820, "0", "État: Gazeux | Eau: Traces | Temp: -108°C")
+    satellite_jupiter1 = Satellite("Io", BROWN, scale_value(50, screen_width), scale_value(30, screen_width), 0.04, scale_value(4, screen_width), jupiter, 3642, "0", "État: Solide | Eau: Traces")
+    satellite_jupiter2 = Satellite("Europa", CYAN, scale_value(60, screen_width), scale_value(40, screen_width), 0.03, scale_value(5, screen_width), jupiter, 3121, "0", "État: Solide | Eau: Traces | Océans sous la surface")
+    satellite_jupiter3 = Satellite("Ganymède", GREY, scale_value(70, screen_width), scale_value(50, screen_width), 0.025, scale_value(6, screen_width), jupiter, 5262, "0", "État: Solide | Eau: Traces")
+    satellite_jupiter4 = Satellite("Callisto", (200, 200, 200), scale_value(80, screen_width), scale_value(60, screen_width), 0.02, scale_value(6, screen_width), jupiter, 4820, "0", "État: Solide | Eau: Traces")
+    systeme_solaire.add_planet(jupiter)
+    systeme_solaire.add_satellite(satellite_jupiter1)
+    systeme_solaire.add_satellite(satellite_jupiter2)
+    systeme_solaire.add_satellite(satellite_jupiter3)
+    systeme_solaire.add_satellite(satellite_jupiter4)
+
+        #dessiner les anneaux de Saturne
+    def dessiner_anneaux_saturne(surface, saturne):
+        anneaux_largeur = [scale_value(20, width_window), scale_value(40, width_window), scale_value(60, width_window)]
+        anneaux_couleurs = [(210, 180, 140), (192, 192, 192), (169, 169, 169)]  # Couleurs des anneaux
+
+        for largeur, couleur in zip(anneaux_largeur, anneaux_couleurs):
+            pygame.draw.ellipse(
+                surface, couleur,
+                pygame.Rect(
+                    saturne.x - largeur // 2,  # Décalage en fonction de la taille des anneaux
+                    saturne.y - largeur // 4,  # Ajustement en hauteur pour l'effet ellipse
+                    largeur,
+                    largeur // 2),1)# Épaisseur de l'anneau
+            
+    saturne = Planet("Saturne", (255, 215, 0), scale_value(600, screen_width), scale_value(350, screen_width), 0.011, scale_value(12, screen_width), 116460, "0", "État: Gazeux | Eau: Traces | Temp: -178°C")
+    satellite_saturne1 = Satellite("Titan", (255, 165, 0), scale_value(70, screen_width), scale_value(40, screen_width), 0.035, scale_value(6, screen_width), saturne, 5150, "0", "État: Solide | Eau: Lacs de méthane")
+    satellite_saturne2 = Satellite("Rhea", (169, 169, 169), scale_value(80, screen_width), scale_value(50, screen_width), 0.02, scale_value(5, screen_width), saturne, 1528, "0", "État: Solide | Eau: Traces")
+    systeme_solaire.add_planet(saturne)
+    systeme_solaire.add_satellite(satellite_saturne1)
+    systeme_solaire.add_satellite(satellite_saturne2)
+
+    uranus = Planet("Uranus", (173, 216, 230), scale_value(800, screen_width), scale_value(400, screen_width), 0.008, scale_value(10, screen_width), 50724, "0", "État: Gazeux | Eau: Traces | Temp: -224°C")
+    satellite_uranus1 = Satellite("Titania", (210, 180, 140), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(4, screen_width), uranus, 1577, "0", "État: Solide | Eau: Traces")
+    satellite_uranus2 = Satellite("Oberon", (200, 200, 200), scale_value(60, screen_width), scale_value(40, screen_width), 0.02, scale_value(4, screen_width), uranus, 1523, "0", "État: Solide | Eau: Traces")
+    systeme_solaire.add_planet(uranus)
+    systeme_solaire.add_satellite(satellite_uranus1)
+    systeme_solaire.add_satellite(satellite_uranus2)
+
+    neptune = Planet("Neptune", (30, 144, 255), scale_value(900, screen_width), scale_value(500, screen_width), 0.007, scale_value(9, screen_width), 49244, "0", "État: Gazeux | Eau: Traces | Temp: -214°C")
+    satellite_neptune1 = Satellite("Triton", (200, 200, 200), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(5, screen_width), neptune, 2706, "0", "État: Solide | Eau: Traces")
+    systeme_solaire.add_planet(neptune)
+    systeme_solaire.add_satellite(satellite_neptune1)
+    
+
+
+    # ajout des satellites
+    lune = Satellite("Lune", GREY, scale_value(30, screen_width), scale_value(22, screen_width), 0.1, scale_value(3, screen_width), terre, 3474, "0", "Eau: Traces | Pression: ~0 atm | Temp: -183 à 106°C")
     systeme_solaire.add_satellite(lune)
+
+    systeme_solaire.add_planet(soleil)
     
     #controle visibilité de la fenetre de la lune
     fenetre_lune_visible = False
@@ -408,6 +583,11 @@ def main():
         # affice le système solaire
         systeme_solaire.draw(window,eruption_visible)
         
+        # Dessiner les anneaux de Saturne après Saturne
+        dessiner_anneaux_saturne(window, saturne)
+
+        pos_souris = pygame.mouse.get_pos()
+        
         #fenetre de la lune
         phase_actuelle_lune = Lune.det_phase_lune(lune.angle)
         
@@ -436,3 +616,4 @@ def main():
 
 # Lancer le programme
 main()
+
