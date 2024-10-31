@@ -144,7 +144,7 @@ class Planet:
         self.population = population  # Ajout de la population
         self.angle = 0
         self.info = info.split("|")  # On garde les retours à la ligne
-        
+
     def mouvP(self, en_pause):
         #deplacement des planetes si pas en pause
         if not en_pause:
@@ -159,7 +159,7 @@ class Planet:
     def survole(self, pos_souris):
         distance = math.hypot(pos_souris[0] - self.x, pos_souris[1] - self.y)
         return distance <= self.size
-    
+
     def afficher_info(self, surface, pos_souris):
         font = pygame.font.SysFont("comicsansms", 20)
         padding = 10  # Espacement entre le texte et les bords du pop-up
@@ -172,7 +172,7 @@ class Planet:
         ] + self.info  # On ajoute les autres infos
         
         # Calcul de la largeur et hauteur du rectangle en fonction du contenu
-        max_line_width = max(font.size(line)[0] for line in info_lines) + 2 * padding
+        max_line_width = max(font.size(line)[0] for line in info_lines) + 2 * padding + 20
         line_height = font.get_height()
         rect_height = line_height * len(info_lines) + 2 * padding
         rect_x, rect_y = pos_souris[0] + 10, pos_souris[1] + 10
@@ -218,7 +218,7 @@ class Satellite:
     
     def afficher_info(self, surface, pos_souris):
         font = pygame.font.SysFont("comicsansms", 20)
-        padding = 10  # Espacement entre le texte et les bords du pop-up
+        padding = 30  # Espacement entre le texte et les bords du pop-up
         
         # Contenu des informations avec le diamètre et la population
         info_lines = [
@@ -337,7 +337,7 @@ class SystemeSolaire:
         # enelve meteorites qui sortent de l'ecran
         self.meteorites = [m for m in self.meteorites if m.y < height_window and m.x < width_window]
 
-        
+#classe lune
 class Lune:
     def det_phase_lune(angle_lune):
         #determine la phase de lune a afficher
@@ -590,6 +590,15 @@ def main():
         
         #fenetre de la lune
         phase_actuelle_lune = Lune.det_phase_lune(lune.angle)
+        
+        if en_pause:
+            for planet in systeme_solaire.planets:
+                if planet.survole(pos_souris):
+                    planet.afficher_info(window, pos_souris)  # Afficher les infos de la planète
+
+            for satellite in systeme_solaire.satellites:
+                if satellite.survole(pos_souris):
+                    satellite.afficher_info(window, pos_souris)  # Afficher les infos du satellite
         
         # afficher la fenêtre des phases de la Lune si elle est visible
         Lune.dessiner_lune(fenetre_lune_visible, phase_actuelle_lune)
