@@ -1,6 +1,9 @@
 import pygame
 import math
 import random
+import sys
+from datetime import datetime, timedelta
+import time
 
 # Initialisation de Pygame
 pygame.init()
@@ -45,6 +48,10 @@ liste_musiques = [
 
 index_musique = 0
 
+vitesse_tps = 86400
+
+date_reference = datetime(1900, 1, 1)
+
 # images pour les boutons
 tailleimage = (70,70)
 image_lire = pygame.transform.scale(pygame.image.load("lire.png"), tailleimage)  # triangle de lecture
@@ -60,8 +67,9 @@ centre_x = width_window // 2
 centre_y = height_window // 2
 
 def scale_value(value, screen_width):
-    # Exemple d'échelle, ajustez le facteur comme nécessaire
-    return int(value * (screen_width / 1920))  # 1920 peut être la largeur de référence
+    return int(value * (screen_width / 1920))  # largeur de référence
+
+
 
 class Bouton:
     # dessiner un bouton
@@ -131,19 +139,28 @@ class Meteorite:
         # Dessine la météorite
         pygame.draw.circle(surface, GREY, (self.x, int(self.y)), self.taille)
 
+# date de reference pr calculer l'angle initial
+def calculerAngle(periode_orbitale, date_reference):
+    # nb d'annees depuis la date de reference
+    date = datetime.now()
+    annees_ecoulees = (date - date_reference).days / 365.26 
+    #radians
+    return (2 * math.pi * annees_ecoulees / periode_orbitale) % (2 * math.pi)
+
 # Classe Planete
 class Planet:
-    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, diametre, population, info=""):
+    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, diametre, population, info="", periode_orbitale=1):
         self.nom = nom
         self.color = color
         self.rayon_x = rayon_x
         self.rayon_y = rayon_y
         self.speed = speed
         self.size = size
-        self.diametre = diametre  # Ajout du diamètre
-        self.population = population  # Ajout de la population
-        self.angle = 0
-        self.info = info.split("|")  # On garde les retours à la ligne
+        self.diametre = diametre  
+        self.population = population
+        self.periode_orbitale = periode_orbitale
+        self.angle = calculerAngle(periode_orbitale, date_reference)
+        self.info = info.split("|")  # retours à la ligne
 
     def mouvP(self, en_pause):
         #deplacement des planetes si pas en pause
@@ -188,7 +205,7 @@ class Planet:
 
 # Classe Satellite 
 class Satellite:
-    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, planet_parent, diametre, population, info=""):
+    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, planet_parent, diametre, population, info="", periode_orbitale=1):
         self.nom = nom
         self.color = color
         self.rayon_x = rayon_x
@@ -200,6 +217,9 @@ class Satellite:
         self.diametre = diametre  # Ajout du diamètre
         self.population = population  # Ajout de la population
         self.info = info.split("|")
+        
+        self.periode_orbitale = periode_orbitale
+        self.angle = calculerAngle(periode_orbitale, date_reference)
 
     def mouvS(self,en_pause):
         #mouvement des sattelites si pas en pause
@@ -282,6 +302,8 @@ class SystemeSolaire:
         self.satellites = []
         self.eruptions = []  # lsite eruptions solaires
         self.meteorites = []
+        self.date = datetime(1900, 1, 1)  # date simulation initiale
+        #self.jours = 1.65
 
     def add_planet(self, planet):
         self.planets.append(planet)
@@ -297,6 +319,12 @@ class SystemeSolaire:
 
     def mouvement(self, en_pause):
         #mouvement si ce n'est pas en pause
+        
+                
+        #avancer date simulation
+        if not en_pause:
+            self.date += timedelta(1)
+            
         for planet in self.planets:
             planet.mouvP(en_pause)
         for satellite in self.satellites:
@@ -307,6 +335,9 @@ class SystemeSolaire:
             
         for meteorite in self.meteorites:
             meteorite.mouvement()
+            
+        for planet in self.planets:
+            planet.angle = calculerAngle(planet.periode_orbitale, self.date)
 
     def draw(self, surface,eruption_visible):
         
@@ -408,21 +439,20 @@ def main():
     
 
     #ajouter des palente
-    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C")
-    terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.029, scale_value(10, screen_width), 12742, "7,9 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C")
-    venus = Planet("Vénus", ORANGE, scale_value(size_sun + 195, screen_width), scale_value(180, screen_width), 0.035, scale_value(9, screen_width), 12104, "0", "Eau: 0% | Pression: 92 atm | Temp: 462°C")
-    mars = Planet("Mars", RED, scale_value(size_sun + 300, screen_width), scale_value(240, screen_width), 0.024, scale_value(5, screen_width), 6779, "0", "Eau: Traces | Pression: 0.006 atm | Temp: -125 à 20°C")
+    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C",0.241)
+    terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.029, scale_value(10, screen_width), 12742, "8,1 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C",1)
+    venus = Planet("Vénus", ORANGE, scale_value(size_sun + 195, screen_width), scale_value(180, screen_width), 0.035, scale_value(9, screen_width), 12104, "0", "Eau: 0% | Pression: 92 atm | Temp: 462°C",0.615)
+    mars = Planet("Mars", RED, scale_value(size_sun + 300, screen_width), scale_value(240, screen_width), 0.024, scale_value(5, screen_width), 6779, "0", "Eau: Traces | Pression: 0.006 atm | Temp: -125 à 20°C",1.881)
     systeme_solaire.add_planet(terre)
     systeme_solaire.add_planet(mercure)
     systeme_solaire.add_planet(venus)
     systeme_solaire.add_planet(mars)
 
-    # ajoute des planètes gazeuses
-    jupiter = Planet("Jupiter", (255, 165, 0), scale_value(450, screen_width), scale_value(300, screen_width), 0.013, scale_value(15, screen_width), 139820, "0", "État: Gazeux | Eau: Traces | Temp: -108°C")
-    satellite_jupiter1 = Satellite("Io", BROWN, scale_value(50, screen_width), scale_value(30, screen_width), 0.04, scale_value(4, screen_width), jupiter, 3642, "0", "État: Solide | Eau: Traces")
-    satellite_jupiter2 = Satellite("Europa", CYAN, scale_value(60, screen_width), scale_value(40, screen_width), 0.03, scale_value(5, screen_width), jupiter, 3121, "0", "État: Solide | Eau: Traces | Océans sous la surface")
-    satellite_jupiter3 = Satellite("Ganymède", GREY, scale_value(70, screen_width), scale_value(50, screen_width), 0.025, scale_value(6, screen_width), jupiter, 5262, "0", "État: Solide | Eau: Traces")
-    satellite_jupiter4 = Satellite("Callisto", (200, 200, 200), scale_value(80, screen_width), scale_value(60, screen_width), 0.02, scale_value(6, screen_width), jupiter, 4820, "0", "État: Solide | Eau: Traces")
+    jupiter = Planet("Jupiter", (255, 165, 0), scale_value(450, screen_width), scale_value(300, screen_width), 0.013, scale_value(15, screen_width), 139820, "0", "État: Gazeux | Eau: Traces | Temp: -108°C",11.86)
+    satellite_jupiter1 = Satellite("Io", BROWN, scale_value(50, screen_width), scale_value(30, screen_width), 0.04, scale_value(4, screen_width), jupiter, 3642, "0", "État: Solide | Eau: Traces",1.8)
+    satellite_jupiter2 = Satellite("Europa", CYAN, scale_value(60, screen_width), scale_value(40, screen_width), 0.03, scale_value(5, screen_width), jupiter, 3121, "0", "État: Solide | Eau: Traces | Océans sous la surface",3.5)
+    satellite_jupiter3 = Satellite("Ganymède", GREY, scale_value(70, screen_width), scale_value(50, screen_width), 0.025, scale_value(6, screen_width), jupiter, 5262, "0", "État: Solide | Eau: Traces",7.15)
+    satellite_jupiter4 = Satellite("Callisto", (200, 200, 200), scale_value(80, screen_width), scale_value(60, screen_width), 0.02, scale_value(6, screen_width), jupiter, 4820, "0", "État: Solide | Eau: Traces",16.7)
     systeme_solaire.add_planet(jupiter)
     systeme_solaire.add_satellite(satellite_jupiter1)
     systeme_solaire.add_satellite(satellite_jupiter2)
@@ -443,29 +473,29 @@ def main():
                     largeur,
                     largeur // 2),1)# Épaisseur de l'anneau
             
-    saturne = Planet("Saturne", (255, 215, 0), scale_value(600, screen_width), scale_value(350, screen_width), 0.011, scale_value(12, screen_width), 116460, "0", "État: Gazeux | Eau: Traces | Temp: -178°C")
-    satellite_saturne1 = Satellite("Titan", (255, 165, 0), scale_value(70, screen_width), scale_value(40, screen_width), 0.035, scale_value(6, screen_width), saturne, 5150, "0", "État: Solide | Eau: Lacs de méthane")
-    satellite_saturne2 = Satellite("Rhea", (169, 169, 169), scale_value(80, screen_width), scale_value(50, screen_width), 0.02, scale_value(5, screen_width), saturne, 1528, "0", "État: Solide | Eau: Traces")
+    saturne = Planet("Saturne", (255, 215, 0), scale_value(600, screen_width), scale_value(350, screen_width), 0.011, scale_value(12, screen_width), 116460, "0", "État: Gazeux | Eau: Traces | Temp: -178°C",29.46)
+    satellite_saturne1 = Satellite("Titan", (255, 165, 0), scale_value(70, screen_width), scale_value(40, screen_width), 0.035, scale_value(6, screen_width), saturne, 5150, "0", "État: Solide | Eau: Lacs de méthane",15.9)
+    satellite_saturne2 = Satellite("Rhea", (169, 169, 169), scale_value(80, screen_width), scale_value(50, screen_width), 0.02, scale_value(5, screen_width), saturne, 1528, "0", "État: Solide | Eau: Traces",4.5)
     systeme_solaire.add_planet(saturne)
     systeme_solaire.add_satellite(satellite_saturne1)
     systeme_solaire.add_satellite(satellite_saturne2)
 
-    uranus = Planet("Uranus", (173, 216, 230), scale_value(800, screen_width), scale_value(400, screen_width), 0.008, scale_value(10, screen_width), 50724, "0", "État: Gazeux | Eau: Traces | Temp: -224°C")
-    satellite_uranus1 = Satellite("Titania", (210, 180, 140), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(4, screen_width), uranus, 1577, "0", "État: Solide | Eau: Traces")
-    satellite_uranus2 = Satellite("Oberon", (200, 200, 200), scale_value(60, screen_width), scale_value(40, screen_width), 0.02, scale_value(4, screen_width), uranus, 1523, "0", "État: Solide | Eau: Traces")
+    uranus = Planet("Uranus", (173, 216, 230), scale_value(800, screen_width), scale_value(400, screen_width), 0.008, scale_value(10, screen_width), 50724, "0", "État: Gazeux | Eau: Traces | Temp: -224°C",84.01)
+    satellite_uranus1 = Satellite("Titania", (210, 180, 140), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(4, screen_width), uranus, 1577, "0", "État: Solide | Eau: Traces",8.7)
+    satellite_uranus2 = Satellite("Oberon", (200, 200, 200), scale_value(60, screen_width), scale_value(40, screen_width), 0.02, scale_value(4, screen_width), uranus, 1523, "0", "État: Solide | Eau: Traces",13.5)
     systeme_solaire.add_planet(uranus)
     systeme_solaire.add_satellite(satellite_uranus1)
     systeme_solaire.add_satellite(satellite_uranus2)
 
-    neptune = Planet("Neptune", (30, 144, 255), scale_value(900, screen_width), scale_value(500, screen_width), 0.007, scale_value(9, screen_width), 49244, "0", "État: Gazeux | Eau: Traces | Temp: -214°C")
-    satellite_neptune1 = Satellite("Triton", (200, 200, 200), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(5, screen_width), neptune, 2706, "0", "État: Solide | Eau: Traces")
+    neptune = Planet("Neptune", (30, 144, 255), scale_value(900, screen_width), scale_value(500, screen_width), 0.007, scale_value(9, screen_width), 49244, "0", "État: Gazeux | Eau: Traces | Temp: -214°C",164.8)
+    satellite_neptune1 = Satellite("Triton", (200, 200, 200), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(5, screen_width), neptune, 2706, "0", "État: Solide | Eau: Traces",5.8)
     systeme_solaire.add_planet(neptune)
     systeme_solaire.add_satellite(satellite_neptune1)
     
 
 
     # ajout des satellites
-    lune = Satellite("Lune", GREY, scale_value(30, screen_width), scale_value(22, screen_width), 0.1, scale_value(3, screen_width), terre, 3474, "0", "Eau: Traces | Pression: ~0 atm | Temp: -183 à 106°C")
+    lune = Satellite("Lune", GREY, scale_value(30, screen_width), scale_value(22, screen_width), 0.1, scale_value(3, screen_width), terre, 3474, "0", "Eau: Traces | Pression: ~0 atm | Temp: -183 à 106°C",27.3)
     systeme_solaire.add_satellite(lune)
 
     systeme_solaire.add_planet(soleil)
@@ -484,7 +514,7 @@ def main():
     
     
     # creation des boutons
-    bouton_ouvrir_fermer = pygame.Rect(1520, 50, 30, 30)
+    bouton_ouvrir_fermer = pygame.Rect(width_window-50, height_window-850, 30, 30)
     bouton_stop = pygame.Rect(100, 50, 100, 50)
     boutonEruption = Bouton_eruption(100, 150, 200, 50, ORANGE, "eruptions: on")
     boutonMeteorite = Bouton_eruption(100, 250, 200, 50, ORANGE, "météorites: on")
@@ -583,6 +613,11 @@ def main():
         # affice le système solaire
         systeme_solaire.draw(window,eruption_visible)
         
+        # affichage date
+        font_date = pygame.font.SysFont("comicsansms", 30)
+        date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
+        window.blit(date_texte, (width_window -1500,height_window - 100))
+        
         # Dessiner les anneaux de Saturne après Saturne
         dessiner_anneaux_saturne(window, saturne)
 
@@ -625,4 +660,5 @@ def main():
 
 # Lancer le programme
 main()
+
 
