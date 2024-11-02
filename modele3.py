@@ -505,8 +505,7 @@ def main():
     #controle visibilité de la fenetre de la lune
     fenetre_lune_visible = False
     
-    zoom = 1
-    decalageX , decalageY = 0,0
+    
     
     #pause
     en_pause = False
@@ -613,7 +612,10 @@ def main():
                     active = not active
                 else:
                     active = False
-                color = color_active if active else color_inactive
+                if active:
+                    couleur = couleur_active
+                else:
+                    couleur = couleur_inactive
                 
             if event.type == pygame.KEYDOWN:
                 if active:
@@ -745,7 +747,6 @@ def main():
 
 # Lancer le programme
 main()
-
 
 
 
