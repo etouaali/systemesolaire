@@ -302,7 +302,7 @@ class SystemeSolaire:
         self.eruptions = []  # lsite eruptions solaires
         self.meteorites = []
         self.date = datetime(1900, 1, 1)  # date simulation initiale
-        #self.jours = 1.65
+        self.avancer_date = True
 
     def add_planet(self, planet):
         self.planets.append(planet)
@@ -316,15 +316,16 @@ class SystemeSolaire:
     def add_eruption(self):
         self.eruptions.append(eruptionSolaire())
         
-    def maj_date(self, new_date):
-        self.date = new_date
-
+    def maj_date(self, nouvelle_date):
+        self.date = nouvelle_date
+        self.avancer_date = False
+        
     def mouvement(self, en_pause):
         #mouvement si ce n'est pas en pause
         
                 
         #avancer date simulation
-        if not en_pause:
+        if not en_pause and self.avancer_date:
             self.date += timedelta(1)
             
         for planet in self.planets:
@@ -504,28 +505,36 @@ def main():
     #controle visibilité de la fenetre de la lune
     fenetre_lune_visible = False
     
+    zoom = 1
+    decalageX , decalageY = 0,0
+    
     #pause
     en_pause = False
-    
+    date_changee  = False
     premierTour = True
     
     # variable pr activer/désactiver les meteorites et les eruptions
     eruption_visible = True
     meteorites_actives = True
     
+    
     font = pygame.font.SysFont("comicsansms", 30)
     case = pygame.Rect(100, 100, 140, 32) 
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
-    color = color_inactive
+    couleur_inactive = pygame.Color('lightskyblue3')
+    couleur_active = pygame.Color('dodgerblue2')
+    couleur = couleur_inactive
     active = False
     text = ''
+    
+    
     
     # creation des boutons
     bouton_ouvrir_fermer = pygame.Rect(width_window-50, height_window-850, 30, 30)
     bouton_stop = pygame.Rect(100, 50, 100, 50)
     boutonEruption = Bouton_eruption(100, 150, 200, 50, ORANGE, "eruptions: on")
     boutonMeteorite = Bouton_eruption(100, 250, 200, 50, ORANGE, "météorites: on")
+    
+    
     
     global index_musique
     musique_joue = False
@@ -609,11 +618,36 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if active:
                     if event.key == pygame.K_RETURN:
-                        # Gérer l'entrée de texte
+                        # Entrée de texte pour la date
                         parts = text.split('/')
                         if len(parts) == 3:
                             jour, mois, annee = map(int, parts)
-                            systeme_solaire.maj_date(datetime(annee, mois, jour))
+                            
+                            # Vérification de la validité de la date
+                            date_valide = (
+                                1 <= mois <= 12 and
+                                1 <= jour <= 31 and
+                                annee > 0  # Année positive
+                            )
+                            
+                            # Vérification supplémentaire pour les jours selon le mois
+                            if mois in {4, 6, 9, 11} and jour > 30:  # Avril, Juin, Septembre, Novembre
+                                date_valide = False
+                            elif mois == 2:  # Février
+                                # Année bissextile
+                                est_bissextile = (annee % 4 == 0 and (annee % 100 != 0 or annee % 400 == 0))
+                                if (est_bissextile and jour > 29) or (not est_bissextile and jour > 28):
+                                    date_valide = False
+                            
+                            if date_valide:
+                                # Mise à jour de la date si elle est valide
+                                systeme_solaire.maj_date(datetime(annee, mois, jour, 0, 0, 0))
+                                date_changee = True
+                            else:
+                                print("date invalide. entrer une date au format jour/mois/année.")
+                        else:
+                            print("format invalide : entrer une date au format jour/mois/année.")
+                        
                         text = ''
                     elif event.key == pygame.K_BACKSPACE:
                         text = text[:-1]
@@ -622,11 +656,11 @@ def main():
         
 
         window.fill(BLACK)
-        txt_surface = font.render(text, True, color)
+        txt_surface = font.render(text, True, couleur)
         width = max(200, txt_surface.get_width() + 10)
         case.w = width
         window.blit(txt_surface, (case.x + 5, case.y + 5))
-        pygame.draw.rect(window, color, case, 2)
+        pygame.draw.rect(window, couleur, case, 2)
         
         # ajout de meteorites si actives
         if meteorites_actives and random.random() < 0.1:
@@ -678,6 +712,14 @@ def main():
                 if satellite.survole(pos_souris):
                     satellite.afficher_info(window, pos_souris)  # Afficher les infos du satellite
         
+        if date_changee: # si la date a ete changee pendant stop
+            
+            en_pause = False 
+            systeme_solaire.mouvement(en_pause)  # maj une fois les positions
+            systeme_solaire.avancer_date = True
+            date_changee = False  # reninit la variable
+            en_pause = True
+        
         # afficher la fenêtre des phases de la Lune si elle est visible
         Lune.dessiner_lune(fenetre_lune_visible, phase_actuelle_lune)
         
@@ -703,4 +745,7 @@ def main():
 
 # Lancer le programme
 main()
+
+
+
 
