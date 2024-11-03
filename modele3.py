@@ -106,17 +106,17 @@ class BoutonMusique:
         self.rect = pygame.Rect(x, y, 50, 50)
         self.image_lire = image_lire
         self.image_pause = image_pause
-        self.en_pause = True  # demarre en etat de pause
+        self.en_pause = True  # Démarre en état de pause
 
     def dessiner(self, surface):
         if self.en_pause:
-            surface.blit(self.image_lire, self.rect.topleft)  # image de lecture
+            surface.blit(self.image_lire, self.rect.topleft)
         else:
-            surface.blit(self.image_pause, self.rect.topleft)  # image de pause
-        
+            surface.blit(self.image_pause, self.rect.topleft)
+
     def est_clique(self, pos):
         return self.rect.collidepoint(pos)
-    
+
 
 class Meteorite:
     def __init__(self):
@@ -145,13 +145,14 @@ def calculerAngle(periode_orbitale, date_reference):
 
 # Classe Planete
 class Planet:
-    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, diametre, population, info="", periode_orbitale=1):
+    def __init__(self, nom, color, rayon_x, rayon_y, speed, size, angle_rotation, diametre, population, info="", periode_orbitale=1):
         self.nom = nom
         self.color = color
         self.rayon_x = rayon_x
         self.rayon_y = rayon_y
         self.speed = speed
         self.size = size
+        self.angle_rotation = angle_rotation
         self.diametre = diametre  
         self.population = population
         self.periode_orbitale = periode_orbitale
@@ -166,6 +167,13 @@ class Planet:
             self.angle += self.speed
 
     def drawP(self, surface):
+        #Afficher les axes de rotation
+        longueure_axe = self.size*2 + 10
+        start_x = self.x - (longueure_axe / 2) * math.cos(self.angle_rotation)
+        start_y = self.y - (longueure_axe / 2) * math.sin(self.angle_rotation)
+        end_x = self.x + (longueure_axe / 2) * math.cos(self.angle_rotation)
+        end_y = self.y + (longueure_axe / 2) * math.sin(self.angle_rotation)
+        pygame.draw.line(surface, GREY, (start_x, start_y), (end_x, end_y), 2)
         #affiche les planetes
         pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.size)
         
@@ -424,7 +432,7 @@ class Asteroide:
 
 # Fonction principale
 def main():
-        # Récupérer la largeur de la fenêtre
+    # Récupérer la largeur de la fenêtre
     screen_width, screen_height = pygame.display.get_surface().get_size()
 
     # Créer le système solaire
@@ -432,22 +440,22 @@ def main():
     
     #taille du soleil
     size_sun = scale_value(100, screen_width)  # Taille du soleil à l'échelle
-    soleil = Planet("Soleil", YELLOW, scale_value(0, screen_width), scale_value(0, screen_width), 0, size_sun, 1392000, "0", "État: Gazeux | Temp: 5778 K")
+    soleil = Planet("Soleil", YELLOW, scale_value(0, screen_width), scale_value(0, screen_width), 0, size_sun, 0, 1392000, "0", "État: Gazeux | Temp: 5778 K")
     systeme_solaire.add_planet(soleil)
     
     
 
     #ajouter des palente
-    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C",0.241)
-    terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.029, scale_value(10, screen_width), 12742, "8,1 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C",1)
-    venus = Planet("Vénus", ORANGE, scale_value(size_sun + 195, screen_width), scale_value(180, screen_width), 0.035, scale_value(9, screen_width), 12104, "0", "Eau: 0% | Pression: 92 atm | Temp: 462°C",0.615)
-    mars = Planet("Mars", RED, scale_value(size_sun + 300, screen_width), scale_value(240, screen_width), 0.024, scale_value(5, screen_width), 6779, "0", "Eau: Traces | Pression: 0.006 atm | Temp: -125 à 20°C",1.881)
+    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 0, 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C",0.241)
+    terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.029, scale_value(10, screen_width),  math.radians(23.5), 12742, "8,1 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C",1)
+    venus = Planet("Vénus", ORANGE, scale_value(size_sun + 195, screen_width), scale_value(180, screen_width), 0.035, scale_value(9, screen_width), math.radians(177.4), 12104, "0", "Eau: 0% | Pression: 92 atm | Temp: 462°C",0.615)
+    mars = Planet("Mars", RED, scale_value(size_sun + 300, screen_width), scale_value(240, screen_width), 0.024, scale_value(5, screen_width),  math.radians(25.2), 6779, "0", "Eau: Traces | Pression: 0.006 atm | Temp: -125 à 20°C",1.881)
     systeme_solaire.add_planet(terre)
     systeme_solaire.add_planet(mercure)
     systeme_solaire.add_planet(venus)
     systeme_solaire.add_planet(mars)
 
-    jupiter = Planet("Jupiter", (255, 165, 0), scale_value(450, screen_width), scale_value(300, screen_width), 0.013, scale_value(15, screen_width), 139820, "0", "État: Gazeux | Eau: Traces | Temp: -108°C",11.86)
+    jupiter = Planet("Jupiter", (255, 165, 0), scale_value(450, screen_width), scale_value(300, screen_width), 0.013, scale_value(15, screen_width),  math.radians(3.13), 139820, "0", "État: Gazeux | Eau: Traces | Temp: -108°C",11.86)
     satellite_jupiter1 = Satellite("Io", BROWN, scale_value(50, screen_width), scale_value(30, screen_width), 0.04, scale_value(4, screen_width), jupiter, 3642, "0", "État: Solide | Eau: Traces",1.8)
     satellite_jupiter2 = Satellite("Europa", CYAN, scale_value(60, screen_width), scale_value(40, screen_width), 0.03, scale_value(5, screen_width), jupiter, 3121, "0", "État: Solide | Eau: Traces | Océans sous la surface",3.5)
     satellite_jupiter3 = Satellite("Ganymède", GREY, scale_value(70, screen_width), scale_value(50, screen_width), 0.025, scale_value(6, screen_width), jupiter, 5262, "0", "État: Solide | Eau: Traces",7.15)
@@ -460,33 +468,33 @@ def main():
 
         #dessiner les anneaux de Saturne
     def dessiner_anneaux_saturne(surface, saturne):
-        anneaux_largeur = [scale_value(20, width_window), scale_value(40, width_window), scale_value(60, width_window)]
+        anneaux_largeur = [scale_value(20 * zoom_factor, width_window), scale_value(40 * zoom_factor, width_window), scale_value(60 * zoom_factor, width_window)]
         anneaux_couleurs = [(210, 180, 140), (192, 192, 192), (169, 169, 169)]  # Couleurs des anneaux
 
         for largeur, couleur in zip(anneaux_largeur, anneaux_couleurs):
             pygame.draw.ellipse(
                 surface, couleur,
                 pygame.Rect(
-                    saturne.x - largeur // 2,  # Décalage en fonction de la taille des anneaux
-                    saturne.y - largeur // 4,  # Ajustement en hauteur pour l'effet ellipse
+                    saturne.x* zoom_factor - largeur // 2,  # Décalage en fonction de la taille des anneaux
+                    saturne.y* zoom_factor - largeur // 4,  # Ajustement en hauteur pour l'effet ellipse
                     largeur,
                     largeur // 2),1)# Épaisseur de l'anneau
             
-    saturne = Planet("Saturne", (255, 215, 0), scale_value(600, screen_width), scale_value(350, screen_width), 0.011, scale_value(12, screen_width), 116460, "0", "État: Gazeux | Eau: Traces | Temp: -178°C",29.46)
+    saturne = Planet("Saturne", (255, 215, 0), scale_value(600, screen_width), scale_value(350, screen_width), 0.011, scale_value(12, screen_width), math.radians(26.7), 116460, "0", "État: Gazeux | Eau: Traces | Temp: -178°C",29.46)
     satellite_saturne1 = Satellite("Titan", (255, 165, 0), scale_value(70, screen_width), scale_value(40, screen_width), 0.035, scale_value(6, screen_width), saturne, 5150, "0", "État: Solide | Eau: Lacs de méthane",15.9)
     satellite_saturne2 = Satellite("Rhea", (169, 169, 169), scale_value(80, screen_width), scale_value(50, screen_width), 0.02, scale_value(5, screen_width), saturne, 1528, "0", "État: Solide | Eau: Traces",4.5)
     systeme_solaire.add_planet(saturne)
     systeme_solaire.add_satellite(satellite_saturne1)
     systeme_solaire.add_satellite(satellite_saturne2)
 
-    uranus = Planet("Uranus", (173, 216, 230), scale_value(800, screen_width), scale_value(400, screen_width), 0.008, scale_value(10, screen_width), 50724, "0", "État: Gazeux | Eau: Traces | Temp: -224°C",84.01)
+    uranus = Planet("Uranus", (173, 216, 230), scale_value(800, screen_width), scale_value(400, screen_width), 0.008, scale_value(10, screen_width), math.radians(97.8), 50724, "0", "État: Gazeux | Eau: Traces | Temp: -224°C",84.01)
     satellite_uranus1 = Satellite("Titania", (210, 180, 140), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(4, screen_width), uranus, 1577, "0", "État: Solide | Eau: Traces",8.7)
     satellite_uranus2 = Satellite("Oberon", (200, 200, 200), scale_value(60, screen_width), scale_value(40, screen_width), 0.02, scale_value(4, screen_width), uranus, 1523, "0", "État: Solide | Eau: Traces",13.5)
     systeme_solaire.add_planet(uranus)
     systeme_solaire.add_satellite(satellite_uranus1)
     systeme_solaire.add_satellite(satellite_uranus2)
 
-    neptune = Planet("Neptune", (30, 144, 255), scale_value(900, screen_width), scale_value(500, screen_width), 0.007, scale_value(9, screen_width), 49244, "0", "État: Gazeux | Eau: Traces | Temp: -214°C",164.8)
+    neptune = Planet("Neptune", (30, 144, 255), scale_value(900, screen_width), scale_value(500, screen_width), 0.007, scale_value(9, screen_width), math.radians(28.3), 49244, "0", "État: Gazeux | Eau: Traces | Temp: -214°C",164.8)
     satellite_neptune1 = Satellite("Triton", (200, 200, 200), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(5, screen_width), neptune, 2706, "0", "État: Solide | Eau: Traces",5.8)
     systeme_solaire.add_planet(neptune)
     systeme_solaire.add_satellite(satellite_neptune1)
@@ -528,11 +536,25 @@ def main():
     bouton_stop = pygame.Rect(100, 50, 100, 50)
     boutonEruption = Bouton_eruption(100, 150, 200, 50, ORANGE, "eruptions: on")
     boutonMeteorite = Bouton_eruption(100, 250, 200, 50, ORANGE, "météorites: on")
+    bouton_zoom = pygame.Rect(100, 540, 130, 30)
+    bouton_dezoom = pygame.Rect(100, 575, 130, 30)
+    bouton_recentrer = pygame.Rect(100, 610, 130, 30)
     
     # boutons de contrele musique
-    bouton_lire_pause = BoutonMusique(width_window-207, 800, image_lire, image_pause)
-    bouton_prec = BoutonMusique(width_window-310, 800, image_prec, image_prec) 
-    bouton_suiv = BoutonMusique(width_window-105, 800, image_suiv, image_suiv) 
+
+        # Position et dimensions du cadre basés sur la taille de l'écran
+    CADRE_LARGEUR, CADRE_HAUTEUR = 300, 100  # Taille du cadre
+    CADRE_X = width_window - CADRE_LARGEUR - 20  # Position X du cadre, 20 pixels depuis le bord droit
+    CADRE_Y = height_window - CADRE_HAUTEUR - 20  # Position Y du cadre, 20 pixels depuis le bas
+
+    TAILLE_BOUTON = 50
+    
+        # Initialisation des boutons de contrôle musique avec la classe BoutonMusique
+    bouton_lire_pause = BoutonMusique(CADRE_X + (CADRE_LARGEUR // 2) - (TAILLE_BOUTON // 2), CADRE_Y + 25, image_lire, image_pause)
+    bouton_prec = BoutonMusique(CADRE_X + 30, CADRE_Y + 25, image_prec, image_prec)
+    bouton_suiv = BoutonMusique(CADRE_X + CADRE_LARGEUR - 80, CADRE_Y + 25, image_suiv, image_suiv)
+
+    
     
     
     
@@ -556,6 +578,9 @@ def main():
     
     # Boucle du jeu
     en_cours = True
+    zoom_factor = 1
+    decalage_x, decalage_y = 0, 0
+    zoom_active = False
     while en_cours:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -608,7 +633,7 @@ def main():
                     pygame.mixer.music.load(liste_musiques[index_musique])
                     if musique_joue:
                         pygame.mixer.music.play(0)
-            if event.type == pygame.MOUSEBUTTONDOWN:
+
                 if case.collidepoint(event.pos):
                     active = not active
                 else:
@@ -617,8 +642,31 @@ def main():
                     couleur = couleur_active
                 else:
                     couleur = couleur_inactive
+
+                if bouton_zoom.collidepoint(event.pos):
+                    zoom_factor += 0.4
+                    zoom_active = True
+                    
+                if bouton_dezoom.collidepoint(event.pos) and zoom_factor>0.1:
+                    zoom_factor = max(1, zoom_factor - 0.3)
+                    if zoom_factor == 1:
+                        zoom_active = False
+
+                if bouton_recentrer.collidepoint(event.pos):
+                    zoom_factor = 1
+                    decalage_x, decalage_y = 0, 0
+                    zoom_active = False
                 
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    decalage_x += 20
+                if event.key == pygame.K_RIGHT:
+                    decalage_x -= 20
+                if event.key == pygame.K_UP:
+                    decalage_y += 20
+                if event.key == pygame.K_DOWN:
+                    decalage_y -= 20
+
                 if active:
                     if event.key == pygame.K_RETURN:
                         # entree de texte pour la date
@@ -656,38 +704,21 @@ def main():
 
         window.fill(BLACK)
         
-        #  cadre autour des commandes de musique
-        pygame.draw.rect(window, DARKGREY, (width_window - 320, height_window - 110, 300, 100), 0, 5)
         
-        txt_surface = font.render(texte, True, couleur)
-        width = max(200, txt_surface.get_width() + 10)
-        case.w = width
-        window.blit(txt_surface, (case.x + 5, case.y + 5))
-        pygame.draw.rect(window, couleur, case, 2)
+
         
         # ajout de meteorites si actives
         if meteorites_actives and random.random() < 0.1:
             systeme_solaire.ajoutermeteorite()
-
-        
-
-        # dessiner boutons contrôle de musique
-        bouton_lire_pause.dessiner(window)
-        bouton_prec.dessiner(window)
-        bouton_suiv.dessiner(window)
-        
-        # afficher titre musique en cours
-        font = pygame.font.SysFont("comicsansms", 20)
-        titre_musique = font.render(liste_musiques[index_musique], True, WHITE)
-        window.blit(titre_musique, (width_window - 320 , height_window - 140))
         
         # proba apparition d'une nouvelle eruption
         if random.random() < 0.03:
             systeme_solaire.add_eruption()
             
         # Mise à jour des positions
+        surface_solaire = pygame.Surface((width_window, height_window))
         systeme_solaire.mouvement(en_pause)
-        
+        systeme_solaire.draw(surface_solaire, eruption_visible)
         systeme_solaire.enlevermeteorite()
         
         # affice le système solaire
@@ -705,6 +736,22 @@ def main():
         
         #fenetre de la lune
         phase_actuelle_lune = Lune.det_phase_lune(lune.angle)
+
+        #afficher la surface zoomée
+        if zoom_active:
+            zoomed_surface = pygame.transform.scale(
+                surface_solaire, (int(width_window * zoom_factor), int(height_window * zoom_factor))
+            )
+
+            dessiner_anneaux_saturne(zoomed_surface, saturne) 
+
+            window.blit(zoomed_surface, ((width_window - zoomed_surface.get_width()) // 2+ decalage_x,
+                                         (height_window - zoomed_surface.get_height()) // 2+ decalage_y))
+            
+        else:
+        # Affiche la vue normale
+            window.blit(surface_solaire, (0, 0))
+            dessiner_anneaux_saturne(window, saturne)
         
         if en_pause:
             for planet in systeme_solaire.planets:
@@ -733,9 +780,36 @@ def main():
             Bouton.dessiner_bouton(window, "o", bouton_ouvrir_fermer, CYAN) #ouvrir
             
         Bouton.dessiner_bouton(window, "stop", bouton_stop, ORANGE)
+        Bouton.dessiner_bouton(window, "zoom", bouton_zoom, ORANGE)
+        Bouton.dessiner_bouton(window, "dezoom", bouton_dezoom, ORANGE)
+        Bouton.dessiner_bouton(window, "recentrer", bouton_recentrer, ORANGE)
+
+        #  cadre autour des commandes de musique
+        pygame.draw.rect(window, DARKGREY, (width_window - 320, height_window - 110, 300, 100), 0, 5)
+        
+        txt_surface = font.render(texte, True, couleur)
+        width = max(200, txt_surface.get_width() + 10)
+        case.w = width
+        window.blit(txt_surface, (case.x + 5, case.y + 5))
+        pygame.draw.rect(window, couleur, case, 2)
+        
+        # dessiner boutons contrôle de musique
+        bouton_lire_pause.dessiner(window)
+        bouton_prec.dessiner(window)
+        bouton_suiv.dessiner(window)
+        
+        # afficher titre musique en cours
+        font = pygame.font.SysFont("comicsansms", 20)
+        titre_musique = font.render(liste_musiques[index_musique], True, WHITE)
+        window.blit(titre_musique, (width_window - 320 , height_window - 140))
         
         boutonEruption.dessiner(window)
         boutonMeteorite.dessiner(window)
+
+        # affichage date
+        font_date = pygame.font.SysFont("comicsansms", 30)
+        date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
+        window.blit(date_texte, (100,height_window - 50))
 
         # Mettre à jour l'affichage
         pygame.display.update()
