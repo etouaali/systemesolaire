@@ -117,10 +117,6 @@ class BoutonMusique:
     def est_clique(self, pos):
         return self.rect.collidepoint(pos)
     
-# creer boutons de contrôle de la musique
-bouton_lire_pause = BoutonMusique(1400, 800, image_lire, image_pause)
-bouton_prec = BoutonMusique(1320, 800, image_prec, image_prec) 
-bouton_suiv = BoutonMusique(1480, 800, image_suiv, image_suiv) 
 
 class Meteorite:
     def __init__(self):
@@ -523,15 +519,20 @@ def main():
     couleur_active = pygame.Color('dodgerblue2')
     couleur = couleur_inactive
     active = False
-    text = ''
+    texte = ''
     
     
     
     # creation des boutons
-    bouton_ouvrir_fermer = pygame.Rect(width_window-50, height_window-850, 30, 30)
+    bouton_ouvrir_fermer = pygame.Rect(width_window-50, 50, 30, 30)
     bouton_stop = pygame.Rect(100, 50, 100, 50)
     boutonEruption = Bouton_eruption(100, 150, 200, 50, ORANGE, "eruptions: on")
     boutonMeteorite = Bouton_eruption(100, 250, 200, 50, ORANGE, "météorites: on")
+    
+    # boutons de contrele musique
+    bouton_lire_pause = BoutonMusique(width_window-207, 800, image_lire, image_pause)
+    bouton_prec = BoutonMusique(width_window-310, 800, image_prec, image_prec) 
+    bouton_suiv = BoutonMusique(width_window-105, 800, image_suiv, image_suiv) 
     
     
     
@@ -546,7 +547,7 @@ def main():
         color_active = pygame.Color('dodgerblue2')
         color = color_inactive
         active = False
-        text = ''
+        texte = ''
         
         font = pygame.font.SysFont("comicsansms", 30)
         
@@ -620,17 +621,13 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if active:
                     if event.key == pygame.K_RETURN:
-                        # Entrée de texte pour la date
-                        parts = text.split('/')
-                        if len(parts) == 3:
-                            jour, mois, annee = map(int, parts)
+                        # entree de texte pour la date
+                        parties = texte.split('/')
+                        if len(parties) == 3:
+                            jour, mois, annee = map(int, parties)
                             
-                            # Vérification de la validité de la date
-                            date_valide = (
-                                1 <= mois <= 12 and
-                                1 <= jour <= 31 and
-                                annee > 0  # Année positive
-                            )
+                            # verifier si date valide
+                            date_valide = (1 <= mois <= 12 and 1 <= jour <= 31 and annee > 0)
                             
                             # Vérification supplémentaire pour les jours selon le mois
                             if mois in {4, 6, 9, 11} and jour > 30:  # Avril, Juin, Septembre, Novembre
@@ -650,15 +647,19 @@ def main():
                         else:
                             print("format invalide : entrer une date au format jour/mois/année.")
                         
-                        text = ''
+                        texte = ''
                     elif event.key == pygame.K_BACKSPACE:
-                        text = text[:-1]
+                        texte = texte[:-1]
                     else:
-                        text += event.unicode
+                        texte += event.unicode
         
 
         window.fill(BLACK)
-        txt_surface = font.render(text, True, couleur)
+        
+        #  cadre autour des commandes de musique
+        pygame.draw.rect(window, DARKGREY, (width_window - 320, height_window - 110, 300, 100), 0, 5)
+        
+        txt_surface = font.render(texte, True, couleur)
         width = max(200, txt_surface.get_width() + 10)
         case.w = width
         window.blit(txt_surface, (case.x + 5, case.y + 5))
@@ -669,34 +670,33 @@ def main():
             systeme_solaire.ajoutermeteorite()
 
         
-        #  cadre autour des commandes de musique
-        
-        cadreW = width_window - 320
-        pygame.draw.rect(window, DARKGREY, (cadreW, height_window - 110, 300, 100), 0, 5)
 
         # dessiner boutons contrôle de musique
         bouton_lire_pause.dessiner(window)
         bouton_prec.dessiner(window)
         bouton_suiv.dessiner(window)
+        
         # afficher titre musique en cours
         font = pygame.font.SysFont("comicsansms", 20)
         titre_musique = font.render(liste_musiques[index_musique], True, WHITE)
-        window.blit(titre_musique, (cadreW , height_window - 140))
+        window.blit(titre_musique, (width_window - 320 , height_window - 140))
         
         # proba apparition d'une nouvelle eruption
         if random.random() < 0.03:
             systeme_solaire.add_eruption()
+            
         # Mise à jour des positions
         systeme_solaire.mouvement(en_pause)
         
         systeme_solaire.enlevermeteorite()
+        
         # affice le système solaire
         systeme_solaire.draw(window,eruption_visible)
 
         # affichage date
         font_date = pygame.font.SysFont("comicsansms", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
-        window.blit(date_texte, (width_window -1500,height_window - 100))
+        window.blit(date_texte, (100,height_window - 100))
 
         # Dessiner les anneaux de Saturne après Saturne
         dessiner_anneaux_saturne(window, saturne)
