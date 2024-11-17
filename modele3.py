@@ -11,6 +11,12 @@ pygame.init()
 # Fenêtre du jeu
 window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
+global FPS
+FPS = 60  # Valeur par défaut
+clock = pygame.time.Clock()
+
+
+pause = False
 # couleur
 YELLOW = (255, 255, 0)
 BLUE = (0, 25, 255)
@@ -22,8 +28,26 @@ GREY = (200, 200, 200)
 DARKGREY = (50, 50, 50)
 ORANGE = (255, 128, 0)
 WHITE = (255,255,255)
+
+#image des signes
+signeastro = {
+    'Capricorne': 'capricorne.png',
+    'Verseau': 'verseau.png',
+    'Poissons': 'poisson.png',
+    'Bélier': 'belier.png',
+    'Taureau': 'taureau.png',
+    'Gémeaux': 'gemeaux.png',
+    'Cancer': 'cancer.png',
+    'Lion': 'lion.png',
+    'Vierge': 'vierge.png',
+    'Balance': 'balance.png',
+    'Scorpion': 'scorpion.png',
+    'Sagittaire': 'sagittaire.png'
+}
+
 global axe_visible
 axe_visible=True
+
 #image des phases de la lune
 
 tailleimg = (280,280)
@@ -59,24 +83,9 @@ image_lire = pygame.transform.scale(pygame.image.load("lire.png"), tailleimage) 
 image_pause = pygame.transform.scale(pygame.image.load("pause.png"), tailleimage)  # deux barres pour arrêter
 image_prec = pygame.transform.scale(pygame.image.load("prec.png"), tailleimage)
 image_suiv = pygame.transform.scale(pygame.image.load("suiv.png"), tailleimage)
+
 # Récupére les dimensions de la fenêtre pour mettre la page en plein écran
 width_window, height_window = pygame.display.get_surface().get_size()
-
-#image des signes
-signeastro = {
-    'Capricorne': 'capricorne.png',
-    'Verseau': 'verseau.png',
-    'Poissons': 'poisson.png',
-    'Bélier': 'belier.png',
-    'Taureau': 'taureau.png',
-    'Gémeaux': 'gemeaux.png',
-    'Cancer': 'cancer.png',
-    'Lion': 'lion.png',
-    'Vierge': 'vierge.png',
-    'Balance': 'balance.png',
-    'Scorpion': 'scorpion.png',
-    'Sagittaire': 'sagittaire.png'
-}
 
 # Détermine les coordonnées du centre de la page par rapport a l'ecran
 centre_x = width_window // 2
@@ -89,6 +98,12 @@ def scale_value(value, screen_width):
 
 class Bouton:
     # dessiner un bouton
+    def __init__(self, x, y, largeur, hauteur, texte, action=None):
+        self.rect = pygame.Rect(x, y, largeur, hauteur)
+        self.texte = texte
+        self.action = action
+        self.font = pygame.font.SysFont(None, 36)
+
     def dessiner_bouton(surface, txt, rect, couleur):
         pygame.draw.rect(surface, couleur, rect)
         font = pygame.font.SysFont("comicsansms", 25)
@@ -97,6 +112,18 @@ class Bouton:
         #coodonées et dimensions du rectangle du txt + centrer txt 
         surface.blit(surface_texte, rectangle_txt)
         #dessine une surface
+
+    def dessiner(self, surface):
+        couleur=ORANGE
+        pygame.draw.rect(surface, couleur, self.rect)
+        surface_texte = self.font.render(self.texte, True, BLACK)
+        rect_texte = surface_texte.get_rect(center=self.rect.center)
+        surface.blit(surface_texte, rect_texte)
+
+    def click(self, pos):
+        if self.rect.collidepoint(pos) and self.action:
+            print(f"Bouton cliqué : {self.texte}")
+            self.action()
         
 class Bouton_eruption:
     #classe bouton pour les eruptions
@@ -133,6 +160,46 @@ class BoutonMusique:
     def est_clique(self, pos):
         return self.rect.collidepoint(pos)
 
+class Asteroide:
+    # Attribut pour stocker les informations des astéroïdes
+    asteroides = []
+    angle_rotation = 0  # Angle global de rotation de la ceinture
+    
+    def __init__(nombre_asteroides, distance_ceinture):
+        # Initialiser les astéroïdes avec des angles aléatoires fixes
+        Asteroide.asteroides = [
+            {'angle_initial': random.uniform(0, 2 * math.pi)}
+            for _ in range(nombre_asteroides)
+        ]
+        Asteroide.distance_ceinture = distance_ceinture
+
+    def dessiner_ceinture_asteroides(surface, centre_soleil , vitesse_rotation_ceinture,pause):
+        if not pause:
+            Asteroide.angle_rotation += vitesse_rotation_ceinture
+        else:
+            Asteroide.angle_rotation + vitesse_rotation_ceinture == 0
+
+           # Récupérer la position de la souris
+        souris_x, souris_y = pygame.mouse.get_pos()
+    
+        
+        # Dessiner chaque astéroïde en appliquant l'angle global de rotation
+        for asteroide in Asteroide.asteroides:
+            angle_total = asteroide['angle_initial'] + Asteroide.angle_rotation
+            
+            # Calculer la position X et Y de chaque astéroïde
+            x = centre_soleil[0] + Asteroide.distance_ceinture * math.cos(angle_total)
+            y = centre_soleil[1] + Asteroide.distance_ceinture * math.sin(angle_total)
+            
+            # Dessiner l'astéroïde
+            pygame.draw.circle(surface, (169, 169, 169), (int(x), int(y)), 2)
+            # Vérifier si la souris est proche de cet astéroïde
+            distance_souris_asteroide = math.hypot(souris_x - x, souris_y - y)
+            if distance_souris_asteroide < 10:  # Seuil de survol
+                # Afficher un pop-up près de la souris
+                font = pygame.font.SysFont(None, 24)
+                text = font.render("Astéroïde", True, (255, 255, 255))
+                surface.blit(text, (souris_x + 10, souris_y + 10))
 
 class Meteorite:
     def __init__(self):
@@ -175,12 +242,13 @@ class Planet:
         self.angle = calculerAngle(periode_orbitale, date_reference)
         self.info = info.split("|")  # retours à la ligne
 
-    def mouvP(self, en_pause):
+    def mouvP(self, en_pause, FPS):
         #deplacement des planetes si pas en pause
         if not en_pause:
+            vitesse_reelle = self.speed * FPS
             self.x = centre_x + self.rayon_x * math.cos(self.angle)
             self.y = centre_y + self.rayon_y * math.sin(self.angle)
-            self.angle += self.speed
+            self.angle += vitesse_reelle
 
     def drawP(self, surface):
         #Afficher les axes de rotation
@@ -315,6 +383,30 @@ class eruptionSolaire:
         surface.blit(surface_eruption, (x - self.taille, y - self.taille))
 
 
+class GestionVitesse:
+    def __init__(self, systeme_solaire, speede=1):
+        # Initialisation des vitesses des différents éléments
+        self.systeme_solaire = systeme_solaire
+
+    def changer_vitesse_planetes(self, delta):
+        for planete in self.systeme_solaire.planets:
+            planete.speed += delta
+            planete.speed = max(0, planete.speed)  # S'assurer que la vitesse est positive
+            print(planete.speed)
+
+    def changer_vitesse_asteroides(self, delta_vitesse):
+        self.speede += delta_vitesse
+        if self.speede < 0:
+            self.speede = 0  # On empêche la vitesse de devenir négative
+
+    def get_vitesse_planetes(self):
+        return self.speede
+
+    def get_vitesse_asteroides(self):
+        return self.speede
+
+
+
 # Classe Système Solaire
 class SystemeSolaire:
     def __init__(self):
@@ -350,7 +442,7 @@ class SystemeSolaire:
             self.date += timedelta(1)
             
         for planet in self.planets:
-            planet.mouvP(en_pause)
+            planet.mouvP(en_pause, FPS)
         for satellite in self.satellites:
             satellite.mouvS(en_pause)
             
@@ -421,50 +513,25 @@ class Lune:
             # Affiche l'image de la phase, centrée dans la fenêtre
             window.blit(image_lune[phase], (pos_x + 10, pos_y + 10))  # Ajuster la position de l'image
 
-class Asteroide:
-    
-        # Variables de configuration pour la ceinture d'astéroïdes
-    nombre_asteroides = 200  # Nombre d'astéroïdes dans la ceinture
-    distance_ceinture = scale_value(300, width_window)  # Distance de la ceinture par rapport au soleil
-    vitesse_rotation_ceinture = 0.001  # Vitesse de rotation de la ceinture
-
-
-    # Initialisation des astéroïdes avec des angles aléatoires et des distances fixes
-    asteroides = [{'angle': random.uniform(0, 2 * math.pi)} for _ in range(nombre_asteroides)]
-
-    def dessiner_ceinture_asteroides(surface, centre,asteroides,distance_ceinture,vitesse_rotation_ceinture):
-        for asteroide in asteroides:
-            # Mise à jour de l'angle pour créer une rotation
-            asteroide['angle'] += vitesse_rotation_ceinture
-            angle = asteroide['angle']
-            
-            # Calcul des positions X et Y en fonction de l'angle et de la distance
-            x = centre[0] + distance_ceinture * math.cos(angle)
-            y = centre[1] + distance_ceinture * math.sin(angle)
-            
-            # Dessiner chaque astéroïde comme un petit cercle
-            pygame.draw.circle(surface, (169, 169, 169), (int(x), int(y)), 2)  # Taille et couleur de l'astéroïde
-
-    
 
 # Fonction principale
 def main():
+    global FPS
     # Récupérer la largeur de la fenêtre
     screen_width, screen_height = pygame.display.get_surface().get_size()
 
     # Créer le système solaire
     systeme_solaire = SystemeSolaire()
-    
+    Asteroide.__init__(200, scale_value(300, width_window))
     #taille du soleil
     size_sun = scale_value(100, screen_width)  # Taille du soleil à l'échelle
-    soleil = Planet("Soleil", YELLOW, scale_value(0, screen_width), scale_value(0, screen_width), 0, size_sun, 0, 1392000, "0", "État: Gazeux | Temp: 5778 K")
+    soleil = Planet("Soleil", YELLOW, scale_value(0, screen_width), scale_value(0, screen_width), 0, size_sun,0, 1392000, "0", "État: Gazeux | Temp: 5778 K")
     systeme_solaire.add_planet(soleil)
+    gestion_vitesse = GestionVitesse(systeme_solaire)
     
-    
-
     #ajouter des palente
-    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 0, 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C",0.241)
-    terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.029, scale_value(10, screen_width),  math.radians(23.5), 12742, "8,1 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C",1)
+    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.029,scale_value(4, screen_width), 0, 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C",0.241)
+    terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.09, scale_value(10, screen_width),  math.radians(23.5), 12742, "8,1 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C",1)
     venus = Planet("Vénus", ORANGE, scale_value(size_sun + 195, screen_width), scale_value(180, screen_width), 0.035, scale_value(9, screen_width), math.radians(177.4), 12104, "0", "Eau: 0% | Pression: 92 atm | Temp: 462°C",0.615)
     mars = Planet("Mars", RED, scale_value(size_sun + 300, screen_width), scale_value(240, screen_width), 0.024, scale_value(5, screen_width),  math.radians(25.2), 6779, "0", "Eau: Traces | Pression: 0.006 atm | Temp: -125 à 20°C",1.881)
     systeme_solaire.add_planet(terre)
@@ -483,6 +550,7 @@ def main():
     systeme_solaire.add_satellite(satellite_jupiter3)
     systeme_solaire.add_satellite(satellite_jupiter4)
     global axe_visible
+
         #dessiner les anneaux de Saturne
     def dessiner_anneaux_saturne(surface, saturne):
         anneaux_largeur = [scale_value(20 * zoom_factor, width_window), scale_value(40 * zoom_factor, width_window), scale_value(60 * zoom_factor, width_window)]
@@ -532,7 +600,6 @@ def main():
     en_pause = False
     date_changee  = False
     premierTour = True
-    image_signe = None
     
     # variable pr activer/désactiver les meteorites et les eruptions
     eruption_visible = True
@@ -554,11 +621,14 @@ def main():
     bouton_stop = pygame.Rect(100, 50, 100, 50)
     boutonEruption = Bouton_eruption(100, 150, 200, 50, ORANGE, "eruptions: on")
     boutonMeteorite = Bouton_eruption(100, 250, 200, 50, ORANGE, "météorites: on")
-    bouton_zoom = pygame.Rect(100, 540, 135, 30)
-    bouton_dezoom = pygame.Rect(100, 575, 135, 30)
-    bouton_recentrer = pygame.Rect(100, 610, 135, 30)
+    bouton_zoom = pygame.Rect(100, 540, 130, 30)
+    bouton_dezoom = pygame.Rect(100, 575, 130, 30)
+    bouton_recentrer = pygame.Rect(100, 610, 130, 30)
     bouton_axe_visible = pygame.Rect(100, 500, 135, 30)
-    
+
+    bouton_augmenter_vitesse= pygame.Rect(10, 10, 120, 25)
+    bouton_diminuer_vitesse = pygame.Rect(130, 10, 120, 25)
+    #gestion_vitesse.changer_vitesse_planetes(0.05)
     # boutons de contrele musique
 
         # Position et dimensions du cadre basés sur la taille de l'écran
@@ -574,9 +644,6 @@ def main():
     bouton_suiv = BoutonMusique(CADRE_X + CADRE_LARGEUR - 80, CADRE_Y + 25, image_suiv, image_suiv)
 
     
-    
-    
-    
     global index_musique
     musique_joue = False
     pygame.mixer.music.load(liste_musiques[index_musique])  # chargement premiere musique
@@ -584,48 +651,12 @@ def main():
     
     def saisir_date_input(screen, systeme_solaire):
         input_box = pygame.Rect(100, 100, 140, 32)  # Position et taille de la boîte de saisie
-        color_inactive = pygame.Color(BLUE)
-        color_active = pygame.Color(WHITE)
+        color_inactive = pygame.Color('lightskyblue3')
+        color_active = pygame.Color('dodgerblue2')
         color = color_inactive
         active = False
         texte = ''
-        image_signe = None
-        
         font = pygame.font.SysFont("comicsansms", 30)
-    
-    #definr le signe astro
-    def defsigne(date):
-
-        mois = date.month
-        jour = date.day
-
-        # Vérifie chaque période de signe astrologique
-        if (mois == 3 and jour >= 21) or (mois == 4 and jour <= 19):
-            return "Bélier"
-        elif (mois == 4 and jour >= 20) or (mois == 5 and jour <= 20):
-            return "Taureau"
-        elif (mois == 5 and jour >= 21) or (mois == 6 and jour <= 20):
-            return "Gémeaux"
-        elif (mois == 6 and jour >= 21) or (mois == 7 and jour <= 22):
-            return "Cancer"
-        elif (mois == 7 and jour >= 23) or (mois == 8 and jour <= 22):
-            return "Lion"
-        elif (mois == 8 and jour >= 23) or (mois == 9 and jour <= 22):
-            return "Vierge"
-        elif (mois == 9 and jour >= 23) or (mois == 10 and jour <= 22):
-            return "Balance"
-        elif (mois == 10 and jour >= 23) or (mois == 11 and jour <= 21):
-            return "Scorpion"
-        elif (mois == 11 and jour >= 22) or (mois == 12 and jour <= 21):
-            return "Sagittaire"
-        elif (mois == 12 and jour >= 22) or (mois == 1 and jour <= 19):
-            return "Capricorne"
-        elif (mois == 1 and jour >= 20) or (mois == 2 and jour <= 18):
-            return "Verseau"
-        elif (mois == 2 and jour >= 19) or (mois == 3 and jour <= 20):
-            return "Poissons"
-
-
     
     # Boucle du jeu
     en_cours = True
@@ -672,6 +703,7 @@ def main():
                             pygame.mixer.music.play(0)
                             premierTour = False
 
+                    
                 if bouton_prec.est_clique(event.pos):
                     index_musique = (index_musique - 1) % len(liste_musiques)
                     pygame.mixer.music.load(liste_musiques[index_musique])
@@ -693,6 +725,13 @@ def main():
                 else:
                     couleur = couleur_inactive
 
+                if bouton_augmenter_vitesse.collidepoint(event.pos):
+                    FPS+=10
+                    print("FPS augmenté :", FPS)
+
+                if bouton_diminuer_vitesse.collidepoint(event.pos):
+                    FPS=max(1, FPS - 10)
+
                 if bouton_zoom.collidepoint(event.pos):
                     zoom_factor += 0.4
                     zoom_active = True
@@ -713,6 +752,7 @@ def main():
                     else:
                         axe_visible=True
                 
+                
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     decalage_x += 20
@@ -723,35 +763,29 @@ def main():
                 if event.key == pygame.K_DOWN:
                     decalage_y -= 20
 
-                if active:##
+                if active:
                     if event.key == pygame.K_RETURN:
+                        # entree de texte pour la date
                         parties = texte.split('/')
                         if len(parties) == 3:
                             jour, mois, annee = map(int, parties)
-
-                            # Vérification de la date
+                            
+                            # verifier si date valide
                             date_valide = (1 <= mois <= 12 and 1 <= jour <= 31 and annee > 0)
-                            if mois in {4, 6, 9, 11} and jour > 30:
+                            
+                            # Vérification supplémentaire pour les jours selon le mois
+                            if mois in {4, 6, 9, 11} and jour > 30:  # Avril, Juin, Septembre, Novembre
                                 date_valide = False
-                            elif mois == 2:
+                            elif mois == 2:  # Février
+                                # Année bissextile
                                 est_bissextile = (annee % 4 == 0 and (annee % 100 != 0 or annee % 400 == 0))
                                 if (est_bissextile and jour > 29) or (not est_bissextile and jour > 28):
                                     date_valide = False
+                            
                             if date_valide:
-                                # Mise à jour de la date dans le système solaire
+                                # Mise à jour de la date si elle est valide
                                 systeme_solaire.maj_date(datetime(annee, mois, jour, 0, 0, 0))
-
-                                # Calcul du signe astrologique
-                                signe = defsigne(datetime(annee, mois, jour))
-
-                                # Charge l'image du signe astrologique
-                                image_signe = pygame.image.load(f"{signe}.png")
-                                image_signe = pygame.transform.scale(image_signe, (100, 100))  # Redimensionner l'image
-
-                                # Réinitialiser la saisie de texte
-                                texte = ''  # Vide le champ de texte
-                                active = False  # Désactive l'entrée de texte
-                                ##
+                                date_changee = True
                             else:
                                 print("date invalide. entrer une date au format jour/mois/année.")
                         else:
@@ -762,12 +796,9 @@ def main():
                         texte = texte[:-1]
                     else:
                         texte += event.unicode
-                        
         
 
         window.fill(BLACK)
-        
-        
 
         
         # ajout de meteorites si actives
@@ -788,7 +819,7 @@ def main():
         systeme_solaire.draw(window,eruption_visible)
 
         # affichage date
-        font_date = pygame.font.SysFont("8-Bit-Madness", 30)
+        font_date = pygame.font.SysFont("comicsansms", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 100))
 
@@ -805,9 +836,7 @@ def main():
             zoomed_surface = pygame.transform.scale(
                 surface_solaire, (int(width_window * zoom_factor), int(height_window * zoom_factor))
             )
-
             dessiner_anneaux_saturne(zoomed_surface, saturne) 
-
             window.blit(zoomed_surface, ((width_window - zoomed_surface.get_width()) // 2+ decalage_x,
                                          (height_window - zoomed_surface.get_height()) // 2+ decalage_y))
             
@@ -823,8 +852,6 @@ def main():
             for satellite in systeme_solaire.satellites:
                 if satellite.survole(pos_souris):
                     satellite.afficher_info(window, pos_souris)  # Afficher les infos du satellite
-        else:
-            systeme_solaire.mouvement(False)  # Mettez à jour les positions sans pause
         
         if date_changee: # si la date a ete changee pendant stop
             
@@ -849,6 +876,9 @@ def main():
         Bouton.dessiner_bouton(window, "dezoom", bouton_dezoom, ORANGE)
         Bouton.dessiner_bouton(window, "recentrer", bouton_recentrer, ORANGE)
         Bouton.dessiner_bouton(window, "axe visible", bouton_axe_visible, ORANGE)
+        Bouton.dessiner_bouton(window, "vitesse +", bouton_augmenter_vitesse, ORANGE)
+        Bouton.dessiner_bouton(window, "vitesse -", bouton_diminuer_vitesse, ORANGE)
+
 
         #  cadre autour des commandes de musique
         pygame.draw.rect(window, DARKGREY, (width_window - 320, height_window - 110, 300, 100), 0, 5)
@@ -876,29 +906,14 @@ def main():
         font_date = pygame.font.SysFont("comicsansms", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 50))
-        #image signe astro
-        
-        if image_signe:
-            pygame.draw.rect(window, (255, 255, 255), (100, height_window - 150, 100, 100))  # Fond blanc
-            window.blit(image_signe, (100, height_window - 150))
 
-        # Affichage de l'image du signe astrologique
-        if image_signe:
-            pygame.draw.rect(window, (255, 255, 255), (100, height_window - 150, 100, 100))  # Fond blanc
-            window.blit(image_signe, (100, height_window - 150))
-
-        # Redessiner les boutons et autres éléments après l'affichage du signe
-        Bouton.dessiner_bouton(window, "stop", bouton_stop, ORANGE)
-        Bouton.dessiner_bouton(window, "zoom", bouton_zoom, ORANGE)
-        Bouton.dessiner_bouton(window, "dezoom", bouton_dezoom, ORANGE)
-        Bouton.dessiner_bouton(window, "recentrer", bouton_recentrer, ORANGE)
-        Bouton.dessiner_bouton(window, "axe visible", bouton_axe_visible, ORANGE)
+        Asteroide.dessiner_ceinture_asteroides(window, (centre_x+zoom_factor, centre_y+zoom_factor), 0.002, pause)
 
         # Mettre à jour l'affichage
         pygame.display.update()
 
     
-        pygame.time.Clock().tick(60)
+        clock.tick(FPS)
 
     pygame.quit()
 
