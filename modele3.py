@@ -22,7 +22,8 @@ GREY = (200, 200, 200)
 DARKGREY = (50, 50, 50)
 ORANGE = (255, 128, 0)
 WHITE = (255,255,255)
-
+global axe_visible
+axe_visible=True
 #image des phases de la lune
 
 tailleimg = (280,280)
@@ -58,9 +59,24 @@ image_lire = pygame.transform.scale(pygame.image.load("lire.png"), tailleimage) 
 image_pause = pygame.transform.scale(pygame.image.load("pause.png"), tailleimage)  # deux barres pour arrêter
 image_prec = pygame.transform.scale(pygame.image.load("prec.png"), tailleimage)
 image_suiv = pygame.transform.scale(pygame.image.load("suiv.png"), tailleimage)
-
 # Récupére les dimensions de la fenêtre pour mettre la page en plein écran
 width_window, height_window = pygame.display.get_surface().get_size()
+
+#image des signes
+signeastro = {
+    'Capricorne': 'capricorne.png',
+    'Verseau': 'verseau.png',
+    'Poissons': 'poisson.png',
+    'Bélier': 'belier.png',
+    'Taureau': 'taureau.png',
+    'Gémeaux': 'gemeaux.png',
+    'Cancer': 'cancer.png',
+    'Lion': 'lion.png',
+    'Vierge': 'vierge.png',
+    'Balance': 'balance.png',
+    'Scorpion': 'scorpion.png',
+    'Sagittaire': 'sagittaire.png'
+}
 
 # Détermine les coordonnées du centre de la page par rapport a l'ecran
 centre_x = width_window // 2
@@ -173,7 +189,8 @@ class Planet:
         start_y = self.y - (longueure_axe / 2) * math.sin(self.angle_rotation)
         end_x = self.x + (longueure_axe / 2) * math.cos(self.angle_rotation)
         end_y = self.y + (longueure_axe / 2) * math.sin(self.angle_rotation)
-        pygame.draw.line(surface, GREY, (start_x, start_y), (end_x, end_y), 2)
+        if axe_visible==True:
+            pygame.draw.line(surface, GREY, (start_x, start_y), (end_x, end_y), 2)
         #affiche les planetes
         pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.size)
         
@@ -465,7 +482,7 @@ def main():
     systeme_solaire.add_satellite(satellite_jupiter2)
     systeme_solaire.add_satellite(satellite_jupiter3)
     systeme_solaire.add_satellite(satellite_jupiter4)
-
+    global axe_visible
         #dessiner les anneaux de Saturne
     def dessiner_anneaux_saturne(surface, saturne):
         anneaux_largeur = [scale_value(20 * zoom_factor, width_window), scale_value(40 * zoom_factor, width_window), scale_value(60 * zoom_factor, width_window)]
@@ -515,6 +532,7 @@ def main():
     en_pause = False
     date_changee  = False
     premierTour = True
+    image_signe = None
     
     # variable pr activer/désactiver les meteorites et les eruptions
     eruption_visible = True
@@ -536,9 +554,10 @@ def main():
     bouton_stop = pygame.Rect(100, 50, 100, 50)
     boutonEruption = Bouton_eruption(100, 150, 200, 50, ORANGE, "eruptions: on")
     boutonMeteorite = Bouton_eruption(100, 250, 200, 50, ORANGE, "météorites: on")
-    bouton_zoom = pygame.Rect(100, 540, 130, 30)
-    bouton_dezoom = pygame.Rect(100, 575, 130, 30)
-    bouton_recentrer = pygame.Rect(100, 610, 130, 30)
+    bouton_zoom = pygame.Rect(100, 540, 135, 30)
+    bouton_dezoom = pygame.Rect(100, 575, 135, 30)
+    bouton_recentrer = pygame.Rect(100, 610, 135, 30)
+    bouton_axe_visible = pygame.Rect(100, 500, 135, 30)
     
     # boutons de contrele musique
 
@@ -565,14 +584,46 @@ def main():
     
     def saisir_date_input(screen, systeme_solaire):
         input_box = pygame.Rect(100, 100, 140, 32)  # Position et taille de la boîte de saisie
-        color_inactive = pygame.Color('lightskyblue3')
-        color_active = pygame.Color('dodgerblue2')
+        color_inactive = pygame.Color(BLUE)
+        color_active = pygame.Color(WHITE)
         color = color_inactive
         active = False
         texte = ''
+        image_signe = None
         
         font = pygame.font.SysFont("comicsansms", 30)
-        
+    
+    #definr le signe astro
+    def defsigne(date):
+
+        mois = date.month
+        jour = date.day
+
+        # Vérifie chaque période de signe astrologique
+        if (mois == 3 and jour >= 21) or (mois == 4 and jour <= 19):
+            return "Bélier"
+        elif (mois == 4 and jour >= 20) or (mois == 5 and jour <= 20):
+            return "Taureau"
+        elif (mois == 5 and jour >= 21) or (mois == 6 and jour <= 20):
+            return "Gémeaux"
+        elif (mois == 6 and jour >= 21) or (mois == 7 and jour <= 22):
+            return "Cancer"
+        elif (mois == 7 and jour >= 23) or (mois == 8 and jour <= 22):
+            return "Lion"
+        elif (mois == 8 and jour >= 23) or (mois == 9 and jour <= 22):
+            return "Vierge"
+        elif (mois == 9 and jour >= 23) or (mois == 10 and jour <= 22):
+            return "Balance"
+        elif (mois == 10 and jour >= 23) or (mois == 11 and jour <= 21):
+            return "Scorpion"
+        elif (mois == 11 and jour >= 22) or (mois == 12 and jour <= 21):
+            return "Sagittaire"
+        elif (mois == 12 and jour >= 22) or (mois == 1 and jour <= 19):
+            return "Capricorne"
+        elif (mois == 1 and jour >= 20) or (mois == 2 and jour <= 18):
+            return "Verseau"
+        elif (mois == 2 and jour >= 19) or (mois == 3 and jour <= 20):
+            return "Poissons"
 
 
     
@@ -621,7 +672,6 @@ def main():
                             pygame.mixer.music.play(0)
                             premierTour = False
 
-                    
                 if bouton_prec.est_clique(event.pos):
                     index_musique = (index_musique - 1) % len(liste_musiques)
                     pygame.mixer.music.load(liste_musiques[index_musique])
@@ -656,6 +706,12 @@ def main():
                     zoom_factor = 1
                     decalage_x, decalage_y = 0, 0
                     zoom_active = False
+
+                if bouton_axe_visible.collidepoint(event.pos):
+                    if axe_visible==True:
+                        axe_visible=False
+                    else:
+                        axe_visible=True
                 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
@@ -667,29 +723,35 @@ def main():
                 if event.key == pygame.K_DOWN:
                     decalage_y -= 20
 
-                if active:
+                if active:##
                     if event.key == pygame.K_RETURN:
-                        # entree de texte pour la date
                         parties = texte.split('/')
                         if len(parties) == 3:
                             jour, mois, annee = map(int, parties)
-                            
-                            # verifier si date valide
+
+                            # Vérification de la date
                             date_valide = (1 <= mois <= 12 and 1 <= jour <= 31 and annee > 0)
-                            
-                            # Vérification supplémentaire pour les jours selon le mois
-                            if mois in {4, 6, 9, 11} and jour > 30:  # Avril, Juin, Septembre, Novembre
+                            if mois in {4, 6, 9, 11} and jour > 30:
                                 date_valide = False
-                            elif mois == 2:  # Février
-                                # Année bissextile
+                            elif mois == 2:
                                 est_bissextile = (annee % 4 == 0 and (annee % 100 != 0 or annee % 400 == 0))
                                 if (est_bissextile and jour > 29) or (not est_bissextile and jour > 28):
                                     date_valide = False
-                            
                             if date_valide:
-                                # Mise à jour de la date si elle est valide
+                                # Mise à jour de la date dans le système solaire
                                 systeme_solaire.maj_date(datetime(annee, mois, jour, 0, 0, 0))
-                                date_changee = True
+
+                                # Calcul du signe astrologique
+                                signe = defsigne(datetime(annee, mois, jour))
+
+                                # Charge l'image du signe astrologique
+                                image_signe = pygame.image.load(f"{signe}.png")
+                                image_signe = pygame.transform.scale(image_signe, (100, 100))  # Redimensionner l'image
+
+                                # Réinitialiser la saisie de texte
+                                texte = ''  # Vide le champ de texte
+                                active = False  # Désactive l'entrée de texte
+                                ##
                             else:
                                 print("date invalide. entrer une date au format jour/mois/année.")
                         else:
@@ -700,6 +762,7 @@ def main():
                         texte = texte[:-1]
                     else:
                         texte += event.unicode
+                        
         
 
         window.fill(BLACK)
@@ -725,7 +788,7 @@ def main():
         systeme_solaire.draw(window,eruption_visible)
 
         # affichage date
-        font_date = pygame.font.SysFont("comicsansms", 30)
+        font_date = pygame.font.SysFont("8-Bit-Madness", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 100))
 
@@ -760,6 +823,8 @@ def main():
             for satellite in systeme_solaire.satellites:
                 if satellite.survole(pos_souris):
                     satellite.afficher_info(window, pos_souris)  # Afficher les infos du satellite
+        else:
+            systeme_solaire.mouvement(False)  # Mettez à jour les positions sans pause
         
         if date_changee: # si la date a ete changee pendant stop
             
@@ -783,6 +848,7 @@ def main():
         Bouton.dessiner_bouton(window, "zoom", bouton_zoom, ORANGE)
         Bouton.dessiner_bouton(window, "dezoom", bouton_dezoom, ORANGE)
         Bouton.dessiner_bouton(window, "recentrer", bouton_recentrer, ORANGE)
+        Bouton.dessiner_bouton(window, "axe visible", bouton_axe_visible, ORANGE)
 
         #  cadre autour des commandes de musique
         pygame.draw.rect(window, DARKGREY, (width_window - 320, height_window - 110, 300, 100), 0, 5)
@@ -810,6 +876,23 @@ def main():
         font_date = pygame.font.SysFont("comicsansms", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 50))
+        #image signe astro
+        
+        if image_signe:
+            pygame.draw.rect(window, (255, 255, 255), (100, height_window - 150, 100, 100))  # Fond blanc
+            window.blit(image_signe, (100, height_window - 150))
+
+        # Affichage de l'image du signe astrologique
+        if image_signe:
+            pygame.draw.rect(window, (255, 255, 255), (100, height_window - 150, 100, 100))  # Fond blanc
+            window.blit(image_signe, (100, height_window - 150))
+
+        # Redessiner les boutons et autres éléments après l'affichage du signe
+        Bouton.dessiner_bouton(window, "stop", bouton_stop, ORANGE)
+        Bouton.dessiner_bouton(window, "zoom", bouton_zoom, ORANGE)
+        Bouton.dessiner_bouton(window, "dezoom", bouton_dezoom, ORANGE)
+        Bouton.dessiner_bouton(window, "recentrer", bouton_recentrer, ORANGE)
+        Bouton.dessiner_bouton(window, "axe visible", bouton_axe_visible, ORANGE)
 
         # Mettre à jour l'affichage
         pygame.display.update()
@@ -821,6 +904,3 @@ def main():
 
 # Lancer le programme
 main()
-
-
-
