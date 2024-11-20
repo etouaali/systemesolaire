@@ -11,24 +11,11 @@ pygame.init()
 # Fenêtre du jeu
 window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
-global FPS
-FPS = 120  # Valeur par défaut
+vitesse_factor = 1.0 
 
 # Récupére les dimensions de la fenêtre pour mettre la page en plein écran
 width_window, height_window = pygame.display.get_surface().get_size()
 
-
-
-
-texture_planete_soleil = pygame.image.load("projet NSI ter/luneter/sun.jpg")
-texture_planete_mercure = pygame.image.load("projet NSI ter/luneter/mercury.jpg")
-texture_planete_venus = pygame.image.load("projet NSI ter/luneter/venus.jpg")
-texture_planete_terre = pygame.image.load("projet NSI ter/luneter/terre.jpg")
-texture_planete_mars = pygame.image.load("projet NSI ter/luneter/mars.jpg")
-texture_planete_jupiter = pygame.image.load("projet NSI ter/luneter/jupiter.jpg")
-texture_planete_saturne = pygame.image.load("projet NSI ter/luneter/saturn.jpg")
-texture_planete_uranus = pygame.image.load("projet NSI ter/luneter/uranus.jpg")
-texture_planete_neptune = pygame.image.load("projet NSI ter/luneter/neptune.jpg")
 
 
 pause = False
@@ -143,7 +130,7 @@ class Bouton:
 
     def dessiner_bouton(surface, txt, rect, couleur):
         pygame.draw.rect(surface, couleur, rect)
-        font = pygame.font.SysFont("comicsansms", 25)
+        font = pygame.font.SysFont("Times New Roman", 25)
         surface_texte = font.render(txt, True, BLACK)
         rectangle_txt = surface_texte.get_rect(center=rect.center)
         #coodonées et dimensions du rectangle du txt + centrer txt 
@@ -168,7 +155,7 @@ class Bouton_eruption:
         self.rect = pygame.Rect(x, y, w, h)
         self.couleur = couleur
         self.texte = texte
-        self.font = pygame.font.SysFont("comicsansms", 25)
+        self.font = pygame.font.SysFont("Times New Roman", 25)
         
     def dessiner(self, surface):
         pygame.draw.rect(surface, self.couleur, self.rect)
@@ -266,6 +253,7 @@ import pygame
 import math
 
 class Planet:
+    global vitesse_factor
     def __init__(self, nom, color, rayon_x, rayon_y, speed, size, angle_rotation, diametre, population, info="", periode_orbitale=1, texture_path=None,):
         self.nom = nom
         self.color = color
@@ -276,9 +264,9 @@ class Planet:
         self.angle_rotation = angle_rotation
         self.diametre = diametre  
         self.population = population
+        self.info = info.split("|")  # Retours à la ligne
         self.periode_orbitale = periode_orbitale
         self.angle = calculerAngle(periode_orbitale, date_reference)
-        self.info = info.split("|")  # Retours à la ligne
         
         if texture_path:  # Si un chemin de texture est donné, charge l'image
             self.texture = pygame.image.load(texture_path)
@@ -291,58 +279,42 @@ class Planet:
         texture_size = int(self.size * 2)  # On suppose que la taille de la planète est deux fois le rayon
         self.texture_resized = pygame.transform.scale(self.texture, (texture_size, texture_size))
 
-    def mouvP(self, en_pause, FPS):
+    def mouvP(self, en_pause, vitesse_factor):
         # Déplacement des planètes si pas en pause
         if not en_pause:
-            vitesse_reelle = self.speed * FPS
             self.x = centre_x + self.rayon_x * math.cos(self.angle)
             self.y = centre_y + self.rayon_y * math.sin(self.angle)
-            self.angle += vitesse_reelle
+            self.angle += self.speed * vitesse_factor
 
     def drawP(self, surface):
-      # Afficher l'ombre douce (shadow)
-      shadow_offset = 12
-      shadow_color = (0, 0, 0, 100)  # Couleur de l'ombre avec opacité
-      shadow_surface = pygame.Surface((self.size * 2 + shadow_offset * 2, self.size * 2 + shadow_offset * 2), pygame.SRCALPHA)
-      pygame.draw.circle(shadow_surface, shadow_color, (self.size + shadow_offset, self.size + shadow_offset), self.size + 2)
-      surface.blit(shadow_surface, (self.x - self.size - shadow_offset, self.y - self.size - shadow_offset))
+        """Dessine la planète avec une texture ronde et un masque circulaire."""
+        if hasattr(self, 'texture_resized'):
+            # Taille de la texture
+            taille_texture = self.size * 2
 
-      # Afficher les axes de rotation
-      longueur_axe = self.size * 2 + 10
-      start_x = self.x - (longueur_axe / 2) * math.cos(self.angle_rotation)
-      start_y = self.y - (longueur_axe / 2) * math.sin(self.angle_rotation)
-      end_x = self.x + (longueur_axe / 2) * math.cos(self.angle_rotation)
-      end_y = self.y + (longueur_axe / 2) * math.sin(self.angle_rotation)
+            # Surface temporaire pour créer la texture masquée
+            texture_circulaire = pygame.Surface((taille_texture, taille_texture), pygame.SRCALPHA)
+            texture_circulaire.blit(self.texture_resized, (0, 0))  # Dessine la texture redimensionnée
 
-      if axe_visible:
-          pygame.draw.line(surface, GREY, (start_x, start_y), (end_x, end_y), 2)
+            # Création d'un masque circulaire
+            masque = pygame.Surface((taille_texture, taille_texture), pygame.SRCALPHA)
+            pygame.draw.circle(masque, (255, 255, 255), (taille_texture // 2, taille_texture // 2), self.size)
 
-      # Redimensionner la texture à la taille de la planète
-      if hasattr(self, 'texture_resized'):
-          taille_texture = self.size * 2  # La texture doit être de la même taille que la planète
-          self.texture_resized = pygame.transform.scale(self.texture, (taille_texture, taille_texture))
+            # Application du masque circulaire
+            texture_circulaire.blit(masque, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
 
-          # Créer un masque circulaire
-          mask = pygame.Surface((taille_texture, taille_texture), pygame.SRCALPHA)  # Surface avec transparence
-          pygame.draw.circle(mask, (255, 255, 255), (taille_texture // 2, taille_texture // 2), self.size)  # Cercle blanc
+            # Affichage de la texture ronde sur la surface principale
+            rect = texture_circulaire.get_rect(center=(int(self.x), int(self.y)))
+            surface.blit(texture_circulaire, rect)
 
-          # Appliquer le masque sur la texture redimensionnée
-          self.texture_resized.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
-      # Afficher la texture redimensionnée (ronde)
-      if hasattr(self, 'texture_resized'):
-          rect = self.texture_resized.get_rect(center=(int(self.x), int(self.y)))
-          surface.blit(self.texture_resized, rect)
-      else:
-          # Si aucune texture n'est définie, dessiner un cercle par défaut
-          pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.size)
 
     def survole(self, pos_souris):
         distance = math.hypot(pos_souris[0] - self.x, pos_souris[1] - self.y)
         return distance <= self.size
 
     def afficher_info(self, surface, pos_souris):
-        font = pygame.font.SysFont("comicsansms", 20)
+        font = pygame.font.SysFont("Times New Roman", 20)
         padding = 10  # Espacement entre le texte et les bords du pop-up
         
         # Contenu des informations avec le diamètre et la population
@@ -369,6 +341,7 @@ class Planet:
 
 # Classe Satellite 
 class Satellite:
+    global vitesse_factor
     def __init__(self, nom, color, rayon_x, rayon_y, speed, size, planet_parent, diametre, population, info="", periode_orbitale=1):
         self.nom = nom
         self.color = color
@@ -384,12 +357,13 @@ class Satellite:
         self.periode_orbitale = periode_orbitale
         self.angle = calculerAngle(periode_orbitale, date_reference)
 
-    def mouvS(self,en_pause):
+    def mouvS(self,en_pause, vitesse_factor):
+        
         #mouvement des sattelites si pas en pause
         if not en_pause:
             self.x = self.planet_parent.x + self.rayon_x * math.cos(self.angle)
             self.y = self.planet_parent.y + self.rayon_y * math.sin(self.angle)
-            self.angle += self.speed
+            self.angle += self.speed * vitesse_factor
 
     def drawS(self, surface):
         #affiche les satellittes
@@ -400,7 +374,7 @@ class Satellite:
         return distance <= self.size
     
     def afficher_info(self, surface, pos_souris):
-        font = pygame.font.SysFont("comicsansms", 20)
+        font = pygame.font.SysFont("Times New Roman", 20)
         padding = 30  # Espacement entre le texte et les bords du pop-up
         
         # Contenu des informations avec le diamètre et la population
@@ -498,9 +472,9 @@ class SystemeSolaire:
             self.date += timedelta(1)
             
         for planet in self.planets:
-            planet.mouvP(en_pause, FPS)
+            planet.mouvP(en_pause, vitesse_factor)
         for satellite in self.satellites:
-            satellite.mouvS(en_pause)
+            satellite.mouvS(en_pause, vitesse_factor)
             
         for eruption in self.eruptions:
             eruption.mouvement()
@@ -572,7 +546,8 @@ class Lune:
 
 # Fonction principale
 def main():
-    global FPS
+    global vitesse_factor
+    global axe_visible
     # Récupérer la largeur de la fenêtre
     screen_width, screen_height = pygame.display.get_surface().get_size()
 
@@ -618,7 +593,7 @@ def main():
     systeme_solaire.add_satellite(satellite_jupiter2)
     systeme_solaire.add_satellite(satellite_jupiter3)
     systeme_solaire.add_satellite(satellite_jupiter4)
-    global axe_visible
+
         #dessiner les anneaux de Saturne
     def dessiner_anneaux_saturne(surface, saturne):
         anneaux_largeur = [scale_value(20 * zoom_factor, width_window), scale_value(40 * zoom_factor, width_window), scale_value(60 * zoom_factor, width_window)]
@@ -687,7 +662,7 @@ def main():
     meteorites_actives = True
     
     
-    font = pygame.font.SysFont("comicsansms", 30)
+    font = pygame.font.SysFont("Times New Roman", 30)
     case = pygame.Rect(0.04 * screen_width, 0.1 * screen_height, 0.1 * screen_width, 0.04 * screen_height) 
     couleur_inactive = pygame.Color('lightskyblue3')
     couleur_active = pygame.Color('dodgerblue2')
@@ -738,7 +713,7 @@ def main():
         color = color_inactive
         active = False
         texte = ''
-        font = pygame.font.SysFont("comicsansms", 30)
+        font = pygame.font.SysFont("Times New Roman", 30)
         image_signe=None
         
     #definr le signe astro
@@ -840,10 +815,11 @@ def main():
                     couleur = couleur_inactive
 
                 if bouton_augmenter_vitesse.collidepoint(event.pos):
-                    FPS+=100
+                    vitesse_factor=min(vitesse_factor * 2, 64)
 
                 if bouton_diminuer_vitesse.collidepoint(event.pos):
-                    FPS=max(1, FPS - 10)
+                    vitesse_factor=max(vitesse_factor / 2, 0.125)
+
 
                 if bouton_zoom.collidepoint(event.pos):
                     zoom_factor += 0.4
@@ -940,7 +916,7 @@ def main():
         systeme_solaire.draw(window,eruption_visible)
 
         # affichage date
-        font_date = pygame.font.SysFont("comicsansms", 30)
+        font_date = pygame.font.SysFont("Times New Roman", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 100))
 
@@ -1018,7 +994,7 @@ def main():
         
         
         # afficher titre musique en cours
-        font = pygame.font.SysFont("comicsansms", 20)
+        font = pygame.font.SysFont("Times New Roman", 20)
         titre_musique = font.render(liste_musiques[index_musique].split("projet NSI ter/luneter/")[-1].replace("projet NSI ter/luneter/", ""), True, WHITE)
         window.blit(titre_musique, (width_window - 320 , height_window - 140))
 
@@ -1027,7 +1003,7 @@ def main():
         boutonMeteorite.dessiner(window)
 
         # affichage date
-        font_date = pygame.font.SysFont("comicsansms", 30)
+        font_date = pygame.font.SysFont("Times New Roman", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 50))
 
@@ -1041,9 +1017,9 @@ def main():
        
          # Mettre à jour l'affichage
         pygame.display.update()
-
     
-        pygame.time.Clock().tick(FPS)
+    
+        pygame.time.Clock().tick(120)
 
 
     pygame.quit()
