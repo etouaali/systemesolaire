@@ -11,9 +11,10 @@ pygame.init()
 # Fenêtre du jeu
 window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
-global FPS
-FPS = 60  # Valeur par défaut
-clock = pygame.time.Clock()
+vitesse_factor = 1.0 
+
+# Récupére les dimensions de la fenêtre pour mettre la page en plein écran
+width_window, height_window = pygame.display.get_surface().get_size()
 
 
 texture_planete_soleil = pygame.image.load("sun.jpg")
@@ -25,6 +26,20 @@ texture_planete_jupiter = pygame.image.load("jupiter.jpg")
 texture_planete_saturne = pygame.image.load("saturn.jpg")
 texture_planete_uranus = pygame.image.load("uranus.jpg")
 texture_planete_neptune = pygame.image.load("neptune.jpg")
+
+curseur_soucoupe = pygame.image.load("soucoupe.png")
+curseur_satellite = pygame.image.load("satellite.png")
+
+
+# Variables pour gérer les boutons souris
+rect_bouton_curseur_1 = pygame.Rect(width_window - 170, height_window // 2, 50, 50)
+rect_bouton_curseur_2 = pygame.Rect(width_window - 170, height_window // 2 + 60 , 50, 50)
+curseur_actuel = None
+
+souris_x, souris_y = pygame.mouse.get_pos()
+
+image_bouton_1 = pygame.transform.scale(curseur_soucoupe, (50, 50))
+image_bouton_2 = pygame.transform.scale(curseur_satellite, (50, 50))
 
 pause = False
 # couleur
@@ -137,7 +152,7 @@ class Bouton:
 
     def dessiner_bouton(surface, txt, rect, couleur):
         pygame.draw.rect(surface, couleur, rect)
-        font = pygame.font.SysFont("comicsansms", 25)
+        font = pygame.font.SysFont("Times New Roman", 25)
         surface_texte = font.render(txt, True, BLACK)
         rectangle_txt = surface_texte.get_rect(center=rect.center)
         #coodonées et dimensions du rectangle du txt + centrer txt 
@@ -162,7 +177,7 @@ class Bouton_eruption:
         self.rect = pygame.Rect(x, y, w, h)
         self.couleur = couleur
         self.texte = texte
-        self.font = pygame.font.SysFont("comicsansms", 25)
+        self.font = pygame.font.SysFont("Times New Roman", 25)
         
     def dessiner(self, surface):
         pygame.draw.rect(surface, self.couleur, self.rect)
@@ -255,7 +270,7 @@ def calculerAngle(periode_orbitale, date_reference):
 
 # Classe Planete
 class Planet:
-
+    global vitesse_factor
     def __init__(self, nom, color, rayon_x, rayon_y, speed, size, angle_rotation, diametre, population, info="", periode_orbitale=1, texture_path=None,):
         self.nom = nom
         self.color = color
@@ -281,13 +296,12 @@ class Planet:
         texture_size = int(self.size * 2)  # On suppose que la taille de la planète est deux fois le rayon
         self.texture_resized = pygame.transform.scale(self.texture, (texture_size, texture_size))
 
-    def mouvP(self, en_pause, FPS):
+    def mouvP(self, en_pause, vitesse_factor):
         #deplacement des planetes si pas en pause
         if not en_pause:
-            vitesse_reelle = self.speed * FPS
             self.x = centre_x + self.rayon_x * math.cos(self.angle)
             self.y = centre_y + self.rayon_y * math.sin(self.angle)
-            self.angle += vitesse_reelle
+            self.angle += self.speed * vitesse_factor
 
     def drawP(self, surface):
       # Afficher l'ombre douce (shadow)
@@ -309,30 +323,30 @@ class Planet:
 
       # Redimensionner la texture à la taille de la planète
       if hasattr(self, 'texture_resized'):
-          taille_texture = self.size * 2  # La texture doit être de la même taille que la planète
-          self.texture_resized = pygame.transform.scale(self.texture, (taille_texture, taille_texture))
+        # Taille de la texture
+        taille_texture = self.size * 2
 
-          # Créer un masque circulaire
-          mask = pygame.Surface((taille_texture, taille_texture), pygame.SRCALPHA)  # Surface avec transparence
-          pygame.draw.circle(mask, (255, 255, 255), (taille_texture // 2, taille_texture // 2), self.size)  # Cercle blanc
+        # Surface temporaire pour créer la texture masquée
+        texture_circulaire = pygame.Surface((taille_texture, taille_texture), pygame.SRCALPHA)
+        texture_circulaire.blit(self.texture_resized, (0, 0))  # Dessine la texture redimensionnée
 
-          # Appliquer le masque sur la texture redimensionnée
-          self.texture_resized.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+        # Création d'un masque circulaire
+        masque = pygame.Surface((taille_texture, taille_texture), pygame.SRCALPHA)
+        pygame.draw.circle(masque, (255, 255, 255), (taille_texture // 2, taille_texture // 2), self.size)
 
-      # Afficher la texture redimensionnée (ronde)
-      if hasattr(self, 'texture_resized'):
-          rect = self.texture_resized.get_rect(center=(int(self.x), int(self.y)))
-          surface.blit(self.texture_resized, rect)
-      else:
-          # Si aucune texture n'est définie, dessiner un cercle par défaut
-          pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.size)
+        # Application du masque circulaire
+        texture_circulaire.blit(masque, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+        # Affichage de la texture ronde sur la surface principale
+        rect = texture_circulaire.get_rect(center=(int(self.x), int(self.y)))
+        surface.blit(texture_circulaire, rect)
         
     def survole(self, pos_souris):
         distance = math.hypot(pos_souris[0] - self.x, pos_souris[1] - self.y)
         return distance <= self.size
 
     def afficher_info(self, surface, pos_souris):
-        font = pygame.font.SysFont("comicsansms", 20)
+        font = pygame.font.SysFont("Times New Roman", 20)
         padding = 10  # Espacement entre le texte et les bords du pop-up
         
         # Contenu des informations avec le diamètre et la population
@@ -359,6 +373,7 @@ class Planet:
 
 # Classe Satellite 
 class Satellite:
+    global vitesse_factor
     def __init__(self, nom, color, rayon_x, rayon_y, speed, size, planet_parent, diametre, population, info="", periode_orbitale=1):
         self.nom = nom
         self.color = color
@@ -374,12 +389,12 @@ class Satellite:
         self.periode_orbitale = periode_orbitale
         self.angle = calculerAngle(periode_orbitale, date_reference)
 
-    def mouvS(self,en_pause):
+    def mouvS(self,en_pause, vitesse_factor):
         #mouvement des sattelites si pas en pause
         if not en_pause:
             self.x = self.planet_parent.x + self.rayon_x * math.cos(self.angle)
             self.y = self.planet_parent.y + self.rayon_y * math.sin(self.angle)
-            self.angle += self.speed
+            self.angle += self.speed * vitesse_factor
 
     def drawS(self, surface):
         #affiche les satellittes
@@ -390,7 +405,7 @@ class Satellite:
         return distance <= self.size
     
     def afficher_info(self, surface, pos_souris):
-        font = pygame.font.SysFont("comicsansms", 20)
+        font = pygame.font.SysFont("Times New Roman", 20)
         padding = 30  # Espacement entre le texte et les bords du pop-up
         
         # Contenu des informations avec le diamètre et la population
@@ -510,9 +525,9 @@ class SystemeSolaire:
             self.date += timedelta(1)
             
         for planet in self.planets:
-            planet.mouvP(en_pause, FPS)
+            planet.mouvP(en_pause, vitesse_factor)
         for satellite in self.satellites:
-            satellite.mouvS(en_pause)
+            satellite.mouvS(en_pause, vitesse_factor)
             
         for eruption in self.eruptions:
             eruption.mouvement()
@@ -582,10 +597,29 @@ class Lune:
             # Affiche l'image de la phase, centrée dans la fenêtre
             window.blit(image_lune[phase], (pos_x + 10, pos_y + 10))  # Ajuster la position de l'image
 
+curseur_actuel = None
+souris_x, souris_y = pygame.mouse.get_pos()
+def dessiner_interface():
+
+    # Dessiner les boutons avec les images de curseur
+    window.blit(image_bouton_1, (rect_bouton_curseur_1.x, rect_bouton_curseur_1.y))
+    window.blit(image_bouton_2, (rect_bouton_curseur_2.x, rect_bouton_curseur_2.y))
+
+    # Si un curseur personnalisé est défini, l'afficher
+    if curseur_actuel:
+        pygame.mouse.set_visible(False)
+        curseur_rect = curseur_actuel.get_rect()
+        curseur_rect.topleft = (souris_x - curseur_rect.width // 2, souris_y - curseur_rect.height // 2)
+        window.blit(curseur_actuel, curseur_rect)
+    else:
+        # Sinon, garder le curseur système visible
+        pygame.mouse.set_visible(True)
 
 # Fonction principale
 def main():
-    global FPS
+    global vitesse_factor
+    global axe_visible
+    global curseur_actuel, souris_x, souris_y
     # Récupérer la largeur de la fenêtre
     screen_width, screen_height = pygame.display.get_surface().get_size()
 
@@ -699,7 +733,7 @@ def main():
     meteorites_actives = True
     
     
-    font = pygame.font.SysFont("comicsansms", 30)
+    font = pygame.font.SysFont("Times New Roman", 30)
     case = pygame.Rect(0.04 * screen_width, 0.1 * screen_height, 0.1 * screen_width, 0.04 * screen_height) 
     couleur_inactive = pygame.Color('lightskyblue3')
     couleur_active = pygame.Color('dodgerblue2')
@@ -749,7 +783,7 @@ def main():
         color = color_inactive
         active = False
         texte = ''
-        font = pygame.font.SysFont("comicsansms", 30)
+        font = pygame.font.SysFont("Times New Roman", 30)
         image_signe=None
         
     #definr le signe astro
@@ -783,201 +817,6 @@ def main():
             return "Verseau"
         elif (mois == 2 and jour >= 19) or (mois == 3 and jour <= 20):
             return "Poissons"
-    
-    def afficher_taureau_horoscope(window):
-        # img taureau
-        taureau_x = width_window // 2 - taureauimg.get_width() // 2  # Centrer horizontalement
-        taureau_y = height_window - 400
-        window.blit(taureauimg, (taureau_x, taureau_y))  # Afficher l'image du Taureau
-
-        # Afficher l'horoscope du Taureau
-        font = pygame.font.SysFont("comicsansms", 20)
-        horoscope_text = ["Horoscope du jour :",
-                          "Faites attention aux mauvaises ondes qui peuvent vous attaquer",
-                          "elle pourrait vous rendre un peu trop severe,",
-                          "reflechissez bien avant d'utiliser votre stylo rouge ."]
-
-        
-        text_x = width_window - 800
-        text_y = 100
-
-        for line in horoscope_text:
-            message = font.render(line, True, WHITE)
-            window.blit(message, (text_x, text_y))  # Afficher le texte
-            text_y += 40  # Espacer les lignes de texte
-    
-    def afficher_ambiance_taureau(window):
-        # arreire plnan
-        window.fill((34, 139, 34)) 
-
-        # Dessiner un sol (un champ)
-        pygame.draw.rect(window, (139, 69, 19), (0, height_window - 100, width_window, 100))  # sol
-        
-        for i in range(50):  # herbe
-            x = random.randint(0, width_window)
-            y = random.randint(height_window - 80, height_window - 40)
-            pygame.draw.line(window, (34, 139, 34), (x, y), (x, y - random.randint(10, 30)), 2)
-        
-        # ajouter roches
-        for i in range(5):  # Placer quelques roches sur le sol
-            x = random.randint(0, width_window)
-            y = height_window - 80
-            pygame.draw.circle(window, (169, 169, 169), (x, y), random.randint(10, 30))  # Rocher gris
-        
-        # fleurs
-        for i in range(10):
-            x = random.randint(0, width_window)
-            y = random.randint(height_window - 100, height_window - 60)
-            pygame.draw.circle(window, (255, 105, 180), (x, y), 5)  #  fleur rose
-            
-    def animation_poussée_plante():
-        plante_x, plante_y = 300, 300
-        for i in range(10):
-            pygame.draw.circle(window, (34, 139, 34), (plante_x, plante_y), i)  # Plante qui pousse
-            pygame.display.update()
-            pygame.time.delay(800)
-    
-    def appliquer_immersion_taureau(window):
-        # Changer l'ambiance visuelle
-        afficher_ambiance_taureau(window)
-        afficher_taureau_horoscope(window)
-
-
-        # Afficher un message de bienvenue
-        font = pygame.font.SysFont("comicsansms", 21)
-        message = font.render("Votre signe astrologique est le taureau", True, WHITE)
-        window.blit(message, (80, 80))
-
-        # Animer la croissance des plantes ou autres effets visuels
-        animation_poussée_plante()
-
-    
-    def afficher_balance_horoscope(window):
-
-        # Afficher l'horoscope du Taureau
-        font = pygame.font.SysFont("comicsansms", 20)
-        horoscope_text = ["Horoscope du jour :",
-        "La journée s'annonce pleine de détermination.",
-        "Vous serez particulièrement réceptif aux opportunités financières.",
-        "Restez calme et concentrez-vous sur vos objectifs."]
-
-        
-        text_x = width_window - 800
-        text_y = 100
-
-        for line in horoscope_text:
-            message = font.render(line, True, WHITE)
-            window.blit(message, (text_x, text_y))  # Afficher le texte
-            text_y += 40  # Espacer les lignes de texte
-    
-    def afficher_ambiance_balance(window):
-        window.fill(BLUE_SKY)
-        
-        # sol
-        pygame.draw.rect(window, GREEN, (0, height_window - 100, width_window, 100))  # sol
-        
-        # nuages
-        for i in range(3):
-            x = random.randint(0, width_window)
-            y = random.randint(50, 200)
-            pygame.draw.ellipse(window, (211, 211, 211), (x, y, random.randint(60, 100), random.randint(20, 40)))  # nuage
-
-        # fleurs
-        for i in range(10):
-            x = random.randint(0, width_window)
-            y = random.randint(height_window - 100, height_window - 60)
-            pygame.draw.circle(window, (255, 105, 180), (x, y), 5)  # Fleur rose
-        
-        #feuilles
-        for i in range(20):
-            x = random.randint(0, width_window)
-            y = random.randint(50, height_window - 150)
-            pygame.draw.circle(window, (34, 139, 34), (x, y), random.randint(2, 6))
-
-    def afficher_balance(window):
-        # Afficher l'image de la Balance au centre du sol
-        x = width_window // 2 - balance_image.get_width() // 2 
-        y = height_window - balance_image.get_height()
-
-        window.blit(balance_image, (x, y))  # Afficher l'image de la Balance
-        
-        pygame.display.update()
-        pygame.time.delay(10000)
-
-    
-    def appliquer_immersion_balance(window):
-        afficher_ambiance_balance(window)
-        afficher_balance_horoscope(window)
-
-        # imgbalance
-        afficher_balance(window)
-
-        font = pygame.font.SysFont("comicsansms", 22)
-        message = font.render("Votre signe astrologique est la Balance", True, BLACK)
-        window.blit(message, (80, 80))
-        
-        
-    def afficher_poisson_horoscope(window):
-        # horoscope poiosson
-        font = pygame.font.SysFont("comicsansms", 20)
-        horoscope_text = [
-            "Horoscope du jour :",
-            "Les Poissons sont pleins d'empathie aujourd'hui.",
-            "Faites attention aux émotions des autres.",
-            "Le rêve et l'intuition seront vos alliés.",
-            "Profitez de l'instant présent."
-        ]
-        
-        text_x = 50
-        text_y = 100
-
-        for line in horoscope_text:
-            message = font.render(line, True, WHITE)
-            window.blit(message, (text_x, text_y))  # Afficher le texte
-            text_y += 40  # Espacer les lignes de texte
-
-    # ambiance poisson
-    def afficher_ambiance_poisson(window):
-
-        window.fill(BLUE_SKY)
-        
-        # Dessiner un sol aquatique (représenter un fond marin)
-        pygame.draw.rect(window, GREEN, (0, height_window - 100, width_window, 100))  # Sol
-        
-        # Ajouter des poissons, algues et effets aquatiques
-        for i in range(10):
-            x = random.randint(0, width_window)
-            y = random.randint(0, height_window - 150)
-            pygame.draw.circle(window, (BLUE), (x, y), random.randint(5, 15)) 
-            
-        # bulles
-        for i in range(5):
-            x = random.randint(0, width_window)
-            y = random.randint(0, height_window - 100)
-            pygame.draw.circle(window, (173, 216, 230), (x, y), random.randint(10, 20))  # Bulles d'eau
-
-    # Fonction pour afficher l'image du Poisson
-    def afficher_poisson(window):
-        # Afficher l'image du Poisson sur le sol (centré)
-        x = width_window // 2 - poisson_image.get_width() // 2
-        y = height_window - poisson_image.get_height() - 200  
-        window.blit(poisson_image, (x, y))  # Afficher l'image du Poisson
-        
-        pygame.display.update()
-        pygame.time.delay(10000)  # image pdt 6 secondes
-
-    def appliquer_immersion_poisson(window):
-        afficher_ambiance_poisson(window)
-        
-        # horoscope
-        afficher_poisson_horoscope(window)
-        
-        # img poisson
-        afficher_poisson(window)
-
-        font = pygame.font.SysFont("comicsansms", 22)
-        message = font.render("Votre signe astrologique est le Poisson", True, BLACK)
-        window.blit(message, (80, 80))
 
 
     # Boucle du jeu
@@ -1048,11 +887,10 @@ def main():
                     couleur = couleur_inactive
 
                 if bouton_augmenter_vitesse.collidepoint(event.pos):
-                    FPS+=100
-                    print("FPS augmenté :", FPS)
+                    vitesse_factor=min(vitesse_factor * 2, 64)
 
                 if bouton_diminuer_vitesse.collidepoint(event.pos):
-                    FPS=max(1, FPS - 10)
+                    vitesse_factor=max(vitesse_factor / 2, 0.125)
 
                 if bouton_zoom.collidepoint(event.pos):
                     zoom_factor += 0.4
@@ -1073,7 +911,15 @@ def main():
                         axe_visible=False
                     else:
                         axe_visible=True
-                
+                # Si le premier bouton est cliqué, définir le curseur personnalisé 1
+                if rect_bouton_curseur_1.collidepoint(event.pos):
+                    curseur_actuel = image_bouton_1  # Changer le curseur au curseur 1
+                    pygame.mouse.set_visible(False)  # Masquer le curseur système
+
+                # Si le deuxième bouton est cliqué, définir le curseur personnalisé 2
+                if rect_bouton_curseur_2.collidepoint(event.pos):
+                    curseur_actuel = image_bouton_2  # Changer le curseur au curseur 2
+                    pygame.mouse.set_visible(False)
                 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
@@ -1108,14 +954,14 @@ def main():
                                 # Calcul du signe astrologique
                                 signe = defsigne(datetime(annee, mois, jour))
                                 
-                                if signe == "Taureau":
-                                    appliquer_immersion_taureau(window)
-                                    
-                                if signe == "Balance":
-                                    appliquer_immersion_balance(window)
-
-                                if signe == "Poissons":
-                                    appliquer_immersion_poisson(window)
+#                                 if signe == "Taureau":
+#                                     appliquer_immersion_taureau(window)
+#                                     
+#                                 if signe == "Balance":
+#                                     appliquer_immersion_balance(window)
+# 
+#                                 if signe == "Poissons":
+#                                     appliquer_immersion_poisson(window)
 
                                 # Charge l'image du signe astrologique
                                 image_signe = pygame.image.load(f"{signe}.png")
@@ -1138,7 +984,6 @@ def main():
         
 
         window.blit(background_image, (0,0))
-
         
         # ajout de meteorites si actives
         if meteorites_actives and random.random() < 0.1:
@@ -1158,7 +1003,7 @@ def main():
         systeme_solaire.draw(window,eruption_visible)
 
         # affichage date
-        font_date = pygame.font.SysFont("comicsansms", 30)
+        font_date = pygame.font.SysFont("Times New Roman", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 100))
 
@@ -1166,6 +1011,7 @@ def main():
         dessiner_anneaux_saturne(window, saturne)
 
         pos_souris = pygame.mouse.get_pos()
+        souris_x, souris_y = pygame.mouse.get_pos()
         
         #fenetre de la lune
         phase_actuelle_lune = Lune.det_phase_lune(lune.angle)
@@ -1217,6 +1063,8 @@ def main():
         Bouton.dessiner_bouton(window, "axe visible", bouton_axe_visible, ORANGE)
         Bouton.dessiner_bouton(window, "vitesse +", bouton_augmenter_vitesse, ORANGE)
         Bouton.dessiner_bouton(window, "vitesse -", bouton_diminuer_vitesse, ORANGE)
+        
+
 
 
         #  cadre autour des commandes de musique
@@ -1234,15 +1082,17 @@ def main():
         bouton_suiv.dessiner(window)
         
         # afficher titre musique en cours
-        font = pygame.font.SysFont("comicsansms", 20)
+        font = pygame.font.SysFont("Times New Roman", 20)
         titre_musique = font.render(liste_musiques[index_musique], True, WHITE)
         window.blit(titre_musique, (width_window - 320 , height_window - 140))
         
         boutonEruption.dessiner(window)
         boutonMeteorite.dessiner(window)
 
+        
+
         # affichage date
-        font_date = pygame.font.SysFont("comicsansms", 30)
+        font_date = pygame.font.SysFont("Times New Roman", 30)
         date_texte = font_date.render(systeme_solaire.date.strftime("%d/%m/%Y"), True, WHITE)
         window.blit(date_texte, (100,height_window - 50))
 
@@ -1254,15 +1104,18 @@ def main():
             pygame.draw.rect(window, (255, 255, 255), (95, height_window - 160, 118, 118))  # fond blanc
             window.blit(image_signe, (100, height_window - 150))
 
+        # Dessiner l'interface et le curseur
+        dessiner_interface()
 
         # Mettre à jour l'affichage
         pygame.display.update()
 
-    
-        pygame.time.Clock().tick(FPS)
+
+        pygame.time.Clock().tick(120)
 
     pygame.quit()
 
 # Lancer le programme
 main()
+
 
