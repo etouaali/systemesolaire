@@ -12,24 +12,19 @@ pygame.init()
 window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 global FPS
-FPS = 120  # Valeur par défaut
-
-# Récupére les dimensions de la fenêtre pour mettre la page en plein écran
-width_window, height_window = pygame.display.get_surface().get_size()
+FPS = 60  # Valeur par défaut
+clock = pygame.time.Clock()
 
 
-
-
-texture_planete_soleil = pygame.image.load("projet NSI ter/luneter/sun.jpg")
-texture_planete_mercure = pygame.image.load("projet NSI ter/luneter/mercury.jpg")
-texture_planete_venus = pygame.image.load("projet NSI ter/luneter/venus.jpg")
-texture_planete_terre = pygame.image.load("projet NSI ter/luneter/terre.jpg")
-texture_planete_mars = pygame.image.load("projet NSI ter/luneter/mars.jpg")
-texture_planete_jupiter = pygame.image.load("projet NSI ter/luneter/jupiter.jpg")
-texture_planete_saturne = pygame.image.load("projet NSI ter/luneter/saturn.jpg")
-texture_planete_uranus = pygame.image.load("projet NSI ter/luneter/uranus.jpg")
-texture_planete_neptune = pygame.image.load("projet NSI ter/luneter/neptune.jpg")
-
+texture_planete_soleil = pygame.image.load("sun.jpg")
+texture_planete_mercure = pygame.image.load("mercury.jpg")
+texture_planete_venus = pygame.image.load("venus.jpg")
+texture_planete_terre = pygame.image.load("terre.jpg")
+texture_planete_mars = pygame.image.load("mars.jpg")
+texture_planete_jupiter = pygame.image.load("jupiter.jpg")
+texture_planete_saturne = pygame.image.load("saturn.jpg")
+texture_planete_uranus = pygame.image.load("uranus.jpg")
+texture_planete_neptune = pygame.image.load("neptune.jpg")
 
 pause = False
 # couleur
@@ -42,41 +37,39 @@ RED = (255, 0, 0)
 GREY = (200, 200, 200)
 DARKGREY = (50, 50, 50)
 ORANGE = (255, 128, 0)
-WHITE = (255,255,255)
+WHITE = (255, 255, 255)
+BLUE_SKY = (135, 206, 235) 
+GREEN = (34, 139, 34)
+LIGHT_GREY = (211, 211, 211)
+BROWN = (139, 69, 19)
 
 #image des signes
 signeastro = {
-    'Capricorne': 'projet NSI ter/luneter/capricorne.png',
-    'Verseau': 'projet NSI ter/luneter/verseau.png',
-    'Poissons': 'projet NSI ter/luneter/poisson.png',
-    'Bélier': 'projet NSI ter/luneter/belier.png',
-    'Taureau': 'projet NSI ter/luneter/taureau.png',
-    'Gémeaux': 'projet NSI ter/luneter/gemeaux.png',
-    'Cancer': 'projet NSI ter/luneter/cancer.png',
-    'Lion': 'projet NSI ter/luneter/lion.png',
-    'Vierge': 'projet NSI ter/luneter/vierge.png',
-    'Balance': 'projet NSI ter/luneter/balance.png',
-    'Scorpion': 'projet NSI ter/luneter/scorpion.png',
-    'Sagittaire': 'projet NSI ter/luneter/sagittaire.png'
+    'Capricorne': 'capricorne.png',
+    'Verseau': 'verseau.png',
+    'Poissons': 'poisson.png',
+    'Bélier': 'belier.png',
+    'Taureau': 'taureau.png',
+    'Gémeaux': 'gemeaux.png',
+    'Cancer': 'cancer.png',
+    'Lion': 'lion.png',
+    'Vierge': 'vierge.png',
+    'Balance': 'balance.png',
+    'Scorpion': 'scorpion.png',
+    'Sagittaire': 'sagittaire.png'
 }
 
+#image balance
+balance_image = pygame.image.load('balanceimg.png')
+balance_image = pygame.transform.scale(balance_image, (500, 500))
 
-# Charger une image pour une planète
-texture_planete_soleil = pygame.image.load("projet NSI ter/luneter/sun.jpg")
-texture_planete_mercure = pygame.image.load("projet NSI ter/luneter/mercury.jpg")
-texture_planete_venus = pygame.image.load("projet NSI ter/luneter/venus.jpg")
-texture_planete_terre = pygame.image.load("projet NSI ter/luneter/terre.jpg")
-texture_planete_mars = pygame.image.load("projet NSI ter/luneter/mars.jpg")
-texture_planete_jupiter = pygame.image.load("projet NSI ter/luneter/jupiter.jpg")
-texture_planete_saturne = pygame.image.load("projet NSI ter/luneter/saturn.jpg")
-texture_planete_uranus = pygame.image.load("projet NSI ter/luneter/uranus.jpg")
-texture_planete_neptune = pygame.image.load("projet NSI ter/luneter/neptune.jpg")
+#img taureau
+taureauimg = pygame.image.load('taureauimg.png')  
+taureauimg = pygame.transform.scale(taureauimg, (600, 323))
 
-
-
-
-
-
+#imgpossion
+poisson_image = pygame.image.load('poissonimg.png') 
+poisson_image = pygame.transform.scale(poisson_image, (150, 150))
 
 global axe_visible
 axe_visible=True
@@ -86,22 +79,22 @@ axe_visible=True
 tailleimg = (280,280)
 
 image_lune = [
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/nouvelleLune.png"), tailleimg),
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/premierCroissant.png"), tailleimg),
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/premierQuartier.png"), tailleimg),
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/gibbeuseCroissante.png"), tailleimg),
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/pleineLune.png"), tailleimg),
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/gibbeuseDecroissante.png"), tailleimg),
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/dernierQuartier.png"), tailleimg),
-    pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/dernierCroissant.png"), tailleimg)
+    pygame.transform.scale(pygame.image.load("nouvelleLune.png"), tailleimg),
+    pygame.transform.scale(pygame.image.load("premierCroissant.png"), tailleimg),
+    pygame.transform.scale(pygame.image.load("premierQuartier.png"), tailleimg),
+    pygame.transform.scale(pygame.image.load("gibbeuseCroissante.png"), tailleimg),
+    pygame.transform.scale(pygame.image.load("pleineLune.png"), tailleimg),
+    pygame.transform.scale(pygame.image.load("gibbeuseDecroissante.png"), tailleimg),
+    pygame.transform.scale(pygame.image.load("dernierQuartier.png"), tailleimg),
+    pygame.transform.scale(pygame.image.load("dernierCroissant.png"), tailleimg)
 ]
 
 #liste des musiques 
 liste_musiques = [
-    "projet NSI ter/luneter/DayOne.mp3",
-    "projet NSI ter/luneter/CornfieldChase.mp3",
-    "projet NSI ter/luneter/WhereWereGoing.mp3",
-    "projet NSI ter/luneter/NoTimeForCaution.mp3"
+    "DayOne.mp3",
+    "CornfieldChase.mp3",
+    "WhereWereGoing.mp3",
+    "NoTimeForCaution.mp3"
 ]
 
 index_musique = 0
@@ -112,24 +105,25 @@ date_reference = datetime(1900, 1, 1)
 
 # images pour les boutons
 tailleimage = (70,70)
-image_lire = pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/lire.png"), tailleimage)  # triangle de lecture
-image_pause = pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/pause.png"), tailleimage)  # deux barres pour arrêter
-image_prec = pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/prec.png"), tailleimage)
-image_suiv = pygame.transform.scale(pygame.image.load("projet NSI ter/luneter/suiv.png"), tailleimage)
+image_lire = pygame.transform.scale(pygame.image.load("lire.png"), tailleimage)  # triangle de lecture
+image_pause = pygame.transform.scale(pygame.image.load("pause.png"), tailleimage)  # deux barres pour arrêter
+image_prec = pygame.transform.scale(pygame.image.load("prec.png"), tailleimage)
+image_suiv = pygame.transform.scale(pygame.image.load("suiv.png"), tailleimage)
 
-
+# Récupére les dimensions de la fenêtre pour mettre la page en plein écran
+width_window, height_window = pygame.display.get_surface().get_size()
 
 # Détermine les coordonnées du centre de la page par rapport a l'ecran
 centre_x = width_window // 2
 centre_y = height_window // 2
 
 
-background_image = pygame.image.load("projet NSI ter/luneter/stars.jpg")
+background_image = pygame.image.load("stars.jpg")
 background_image = pygame.transform.scale(background_image, (width_window, height_window))
-
 
 def scale_value(value, screen_width):
     return int(value * (screen_width / 1920))  # largeur de référence
+
 
 
 
@@ -200,34 +194,32 @@ class BoutonMusique:
 class Asteroide:
     # Attribut pour stocker les informations des astéroïdes
     asteroides = []
-    angle_rotation = 0  # Angle global de rotation de la ceinture
-    
+    angle_rotation = 0  # Angle global de rotation de la ceinture    def __init__(nombre_asteroides, distance_ceinture):
     def __init__(self, nombre_asteroides, distances_ceintures):
         Asteroide.asteroides = [
             {'angle_initial': random.uniform(0, 2 * math.pi), 'distance': random.choice(distances_ceintures)}
             for _ in range(nombre_asteroides)
         ]
-    
-    def dessiner_ceinture_asteroides(self, surface, centre_soleil, vitesse_rotation_ceinture, pause, zoom):
 
+    def dessiner_ceinture_asteroides(self, surface, centre_soleil, vitesse_rotation_ceinture, pause, zoom):
         if not pause:
             Asteroide.angle_rotation += vitesse_rotation_ceinture
-        
+
         # Récupérer la position de la souris
         souris_x, souris_y = pygame.mouse.get_pos()
-    
+
         # Dessiner chaque astéroïde
         for asteroide in Asteroide.asteroides:
             angle_total = asteroide['angle_initial'] + Asteroide.angle_rotation
             distance = asteroide['distance']
-            
+
             # Calculer la position X et Y de chaque astéroïde
             x = centre_soleil[0] + distance * math.cos(angle_total) * zoom
             y = centre_soleil[1] + distance * math.sin(angle_total) * zoom
-            
+
             # Dessiner l'astéroïde
             pygame.draw.circle(surface, (169, 169, 169), (int(x), int(y)), 2)
-            
+
             # Vérifier si la souris est proche de cet astéroïde
             distance_souris_asteroide = math.hypot(souris_x - x, souris_y - y)
             if distance_souris_asteroide < 10:  # Seuil de survol
@@ -235,8 +227,7 @@ class Asteroide:
                 font = pygame.font.SysFont(None, 24)
                 text = font.render("Astéroïde", True, (255, 255, 255))
                 surface.blit(text, (souris_x + 10, souris_y + 10))
-
-
+                    
 class Meteorite:
     def __init__(self):
         self.x = random.randint(0, width_window)
@@ -262,10 +253,9 @@ def calculerAngle(periode_orbitale, date_reference):
     #radians
     return (2 * math.pi * annees_ecoulees / periode_orbitale) % (2 * math.pi)
 
-import pygame
-import math
-
+# Classe Planete
 class Planet:
+
     def __init__(self, nom, color, rayon_x, rayon_y, speed, size, angle_rotation, diametre, population, info="", periode_orbitale=1, texture_path=None,):
         self.nom = nom
         self.color = color
@@ -279,7 +269,7 @@ class Planet:
         self.periode_orbitale = periode_orbitale
         self.angle = calculerAngle(periode_orbitale, date_reference)
         self.info = info.split("|")  # Retours à la ligne
-        
+
         if texture_path:  # Si un chemin de texture est donné, charge l'image
             self.texture = pygame.image.load(texture_path)
             self.resize_texture()
@@ -292,7 +282,7 @@ class Planet:
         self.texture_resized = pygame.transform.scale(self.texture, (texture_size, texture_size))
 
     def mouvP(self, en_pause, FPS):
-        # Déplacement des planètes si pas en pause
+        #deplacement des planetes si pas en pause
         if not en_pause:
             vitesse_reelle = self.speed * FPS
             self.x = centre_x + self.rayon_x * math.cos(self.angle)
@@ -336,7 +326,7 @@ class Planet:
       else:
           # Si aucune texture n'est définie, dessiner un cercle par défaut
           pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.size)
-
+        
     def survole(self, pos_souris):
         distance = math.hypot(pos_souris[0] - self.x, pos_souris[1] - self.y)
         return distance <= self.size
@@ -374,7 +364,7 @@ class Satellite:
         self.color = color
         self.rayon_x = rayon_x
         self.rayon_y = rayon_y
-        self.speed = speed
+        self.speed = -speed
         self.size = size
         self.planet_parent = planet_parent
         self.diametre = diametre  # Ajout du diamètre
@@ -458,6 +448,28 @@ class eruptionSolaire:
         surface.blit(surface_eruption, (x - self.taille, y - self.taille))
 
 
+class GestionVitesse:
+    def __init__(self, systeme_solaire, speede=1):
+        # Initialisation des vitesses des différents éléments
+        self.systeme_solaire = systeme_solaire
+
+    def changer_vitesse_planetes(self, delta):
+        for planete in self.systeme_solaire.planets:
+            planete.speed += delta
+            planete.speed = max(0, planete.speed)  # S'assurer que la vitesse est positive
+            print(planete.speed)
+
+    def changer_vitesse_asteroides(self, delta_vitesse):
+        self.speede += delta_vitesse
+        if self.speede < 0:
+            self.speede = 0  # On empêche la vitesse de devenir négative
+
+    def get_vitesse_planetes(self):
+        return self.speede
+
+    def get_vitesse_asteroides(self):
+        return self.speede
+
 
 
 # Classe Système Solaire
@@ -513,6 +525,7 @@ class SystemeSolaire:
 
     def draw(self, surface,eruption_visible):
         surface.blit(self.background, (0, 0))
+        
         for meteorite in self.meteorites:
             meteorite.dessiner(surface)
             
@@ -577,34 +590,32 @@ def main():
     screen_width, screen_height = pygame.display.get_surface().get_size()
 
     # Créer le système solaire
-    systeme_solaire = SystemeSolaire("projet NSI ter/luneter/stars.jpg")
+    systeme_solaire = SystemeSolaire("stars.jpg")
     asteroide_instance = Asteroide(200,[300,315])
-
     #taille du soleil
-      #taille du soleil
     size_sun = scale_value(100, screen_width)  # Taille du soleil à l'échelle
     soleil = Planet("Soleil", YELLOW, scale_value(0, screen_width), scale_value(0, screen_width), 0, size_sun,0, 1392000, "0", "État: Gazeux | Temp: 5778 K | Pression au centre: 2,5 × 10^16 Pa | Diamètre: 1 391 000 km | Masse: 1,989 × 10^30 kg | Luminosité: 3,846 × 10^26 W", 
-    1,"projet NSI ter/luneter/sun.jpg")
+    1,"sun.jpg")
     systeme_solaire.add_planet(soleil)
+    #gestion_vitesse = GestionVitesse(systeme_solaire)
     
-    
-
     #ajouter des palente
-    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 0, 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C | Diamètre: 4 879 km | Masse: 3,301 × 10^23 kg", 
-    0.241,"projet NSI ter/luneter/mercury.jpg")
+    mercure = Planet("Mercure", GREY, scale_value(size_sun +140, screen_width), scale_value(130, screen_width), 0.047, scale_value(4, screen_width), 0, 4879, "0", "Eau: 0% | Pression: ~0 atm | Temp: -173 à 427°C | Diamètre: 4 879 km | Masse: 3,301 × 10^23 kg", 0.241,"mercury.jpg")
     terre = Planet("Terre", BLUE, scale_value(size_sun + 220, screen_width), scale_value(180, screen_width), 0.029, scale_value(10, screen_width),  math.radians(23.5), 12742, "8,1 milliards", "Eau: 71% | Pression: 1 atm | Temp: -88 à 58°C | Diamètre: 12 742 km | Masse: 5,972 × 10^24 kg", 
-    1,"projet NSI ter/luneter/terre.jpg")
+    1,"terre.jpg")
     venus = Planet("Vénus", ORANGE, scale_value(size_sun + 195, screen_width), scale_value(180, screen_width), 0.035, scale_value(9, screen_width), math.radians(177.4), 12104, "0", "Eau: 0% | Pression: 92 atm | Temp: 462°C | Diamètre: 12 104 km | Masse: 4,867 × 10^24 kg", 
-    0.615,"projet NSI ter/luneter/venus.jpg")
+    0.615,"venus.jpg")
     mars = Planet("Mars", RED, scale_value(size_sun + 300, screen_width), scale_value(240, screen_width), 0.024, scale_value(5, screen_width),  math.radians(25.2), 6779, "0", "Eau: Traces | Pression: 0.006 atm | Temp: -125 à 20°C | Diamètre: 6 779 km | Masse: 6,417 × 10^23 kg", 
-    1.881,"projet NSI ter/luneter/mars.jpg")
+    1.881,"mars.jpg")
+    
+    
     systeme_solaire.add_planet(terre)
     systeme_solaire.add_planet(mercure)
     systeme_solaire.add_planet(venus)
     systeme_solaire.add_planet(mars)
 
     jupiter = Planet("Jupiter", (255, 165, 0), scale_value(450, screen_width), scale_value(300, screen_width), 0.013, scale_value(15, screen_width),  math.radians(3.13), 139820, "0",  "État: Gazeux | Eau: Traces | Temp: -108°C | Diamètre: 139 820 km | Masse: 1,898 × 10^27 kg", 
-    11.86,"projet NSI ter/luneter/jupiter.jpg")
+    11.86,"jupiter.jpg")
     satellite_jupiter1 = Satellite("Io", BROWN, scale_value(50, screen_width), scale_value(30, screen_width), 0.04, scale_value(4, screen_width), jupiter, 3642, "0",  "État: Solide | Eau: Traces | Temp: -143°C | Diamètre: 3 642 km | Masse: 8,93 × 10^22 kg", 
     1.8)
     satellite_jupiter2 = Satellite("Europa", CYAN, scale_value(60, screen_width), scale_value(40, screen_width), 0.03, scale_value(5, screen_width), jupiter, 3121, "0", "État: Solide | Eau: Traces | Océans sous la surface | Temp: -160°C | Diamètre: 3 121 km | Masse: 4,80 × 10^22 kg", 
@@ -613,12 +624,14 @@ def main():
     7.15)
     satellite_jupiter4 = Satellite("Callisto", (200, 200, 200), scale_value(80, screen_width), scale_value(60, screen_width), 0.02, scale_value(6, screen_width), jupiter, 4820, "0", "État: Solide | Eau: Traces | Temp: -139°C | Diamètre: 4 820 km | Masse: 1,08 × 10^23 kg", 
     16.7)
+    
     systeme_solaire.add_planet(jupiter)
     systeme_solaire.add_satellite(satellite_jupiter1)
     systeme_solaire.add_satellite(satellite_jupiter2)
     systeme_solaire.add_satellite(satellite_jupiter3)
     systeme_solaire.add_satellite(satellite_jupiter4)
     global axe_visible
+
         #dessiner les anneaux de Saturne
     def dessiner_anneaux_saturne(surface, saturne):
         anneaux_largeur = [scale_value(20 * zoom_factor, width_window), scale_value(40 * zoom_factor, width_window), scale_value(60 * zoom_factor, width_window)]
@@ -632,19 +645,21 @@ def main():
                     saturne.y* zoom_factor - largeur // 4,  # Ajustement en hauteur pour l'effet ellipse
                     largeur,
                     largeur // 2),1)# Épaisseur de l'anneau
-            
+    
     saturne = Planet("Saturne", (255, 215, 0), scale_value(600, screen_width), scale_value(350, screen_width), 0.011, scale_value(12, screen_width), math.radians(26.7), 116460, "0", "État: Gazeux | Eau: Traces | Temp: -178°C | Diamètre: 116 460 km | Masse: 5,683 × 10^26 kg", 
-    29.46,"projet NSI ter/luneter/saturn.jpg")
+    29.46,"saturn.jpg")
     satellite_saturne1 = Satellite("Titan", (255, 165, 0), scale_value(70, screen_width), scale_value(40, screen_width), 0.035, scale_value(6, screen_width), saturne, 5150, "0", "État: Solide | Eau: Lacs de méthane | Temp: -179°C | Diamètre: 5 150 km | Masse: 1,345 × 10^23 kg", 
     15.9)
     satellite_saturne2 = Satellite("Rhea", (169, 169, 169), scale_value(80, screen_width), scale_value(50, screen_width), 0.02, scale_value(5, screen_width), saturne, 1528, "0", "État: Solide | Eau: Traces | Temp: -174°C | Diamètre: 1 528 km | Masse: 2,3 × 10^21 kg", 
     4.5)
+    
     systeme_solaire.add_planet(saturne)
     systeme_solaire.add_satellite(satellite_saturne1)
     systeme_solaire.add_satellite(satellite_saturne2)
 
+
     uranus = Planet("Uranus", (173, 216, 230), scale_value(800, screen_width), scale_value(400, screen_width), 0.008, scale_value(10, screen_width), math.radians(97.8), 50724, "0",  "État: Gazeux | Eau: Traces | Temp: -224°C | Diamètre: 50 724 km | Masse: 8,681 × 10^25 kg", 
-    84.01,"projet NSI ter/luneter/uranus.jpg")
+    84.01,"uranus.jpg")
     satellite_uranus1 = Satellite("Titania", (210, 180, 140), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(4, screen_width), uranus, 1577, "0", "État: Solide | Eau: Traces | Temp: -224°C | Diamètre: 1 577 km | Masse: 3,53 × 10^21 kg", 
     8.7)
     satellite_uranus2 = Satellite("Oberon", (200, 200, 200), scale_value(60, screen_width), scale_value(40, screen_width), 0.02, scale_value(4, screen_width), uranus, 1523, "0", "État: Solide | Eau: Traces | Temp: -224°C | Diamètre: 1 523 km | Masse: 3,00 × 10^21 kg", 
@@ -654,7 +669,7 @@ def main():
     systeme_solaire.add_satellite(satellite_uranus2)
 
     neptune = Planet("Neptune", (30, 144, 255), scale_value(900, screen_width), scale_value(500, screen_width), 0.007, scale_value(9, screen_width), math.radians(28.3), 49244, "0", "État: Gazeux | Eau: Traces | Temp: -214°C | Diamètre: 49 244 km | Masse: 1,024 × 10^26 kg", 
-    164.8,"projet NSI ter/luneter/neptune.jpg")
+    164.8,"neptune.jpg")
     satellite_neptune1 = Satellite("Triton", (200, 200, 200), scale_value(50, screen_width), scale_value(30, screen_width), 0.03, scale_value(5, screen_width), neptune, 2706, "0", "État: Solide | Eau: Traces | Temp: -235°C | Diamètre: 2 706 km | Masse: 2,14 × 10^22 kg", 
     5.8)
     systeme_solaire.add_planet(neptune)
@@ -667,9 +682,6 @@ def main():
     systeme_solaire.add_satellite(lune)
 
     systeme_solaire.add_planet(soleil)
-    
-
-
     
     #controle visibilité de la fenetre de la lune
     fenetre_lune_visible = False
@@ -698,7 +710,6 @@ def main():
     
     
     # creation des boutons
-    # Création des boutons avec des positions proportionnelles
     bouton_ouvrir_fermer = pygame.Rect(screen_width - 0.03 * screen_width, 0.03 * screen_height, 0.02 * screen_width, 0.022 * screen_height)
     bouton_stop = pygame.Rect(0.04 * screen_width, 0.05 * screen_height, 0.1 * screen_width, 0.04 * screen_height)
     boutonEruption = Bouton_eruption(0.04 * screen_width, 0.15 * screen_height, 0.2 * screen_width, 0.05 * screen_height,ORANGE,"eruptions: on")
@@ -710,7 +721,7 @@ def main():
 
     bouton_augmenter_vitesse = pygame.Rect(0.04 * screen_width, 0.02 * screen_height, 0.1 * screen_width, 0.025 * screen_height)
     bouton_diminuer_vitesse = pygame.Rect(0.141 * screen_width, 0.02 * screen_height, 0.1 * screen_width, 0.025 * screen_height)
-        #gestion_vitesse.changer_vitesse_planetes(0.05)
+    #gestion_vitesse.changer_vitesse_planetes(0.05)
     # boutons de contrele musique
 
         # Position et dimensions du cadre basés sur la taille de l'écran
@@ -772,6 +783,203 @@ def main():
             return "Verseau"
         elif (mois == 2 and jour >= 19) or (mois == 3 and jour <= 20):
             return "Poissons"
+    
+    def afficher_taureau_horoscope(window):
+        # img taureau
+        taureau_x = width_window // 2 - taureauimg.get_width() // 2  # Centrer horizontalement
+        taureau_y = height_window - 400
+        window.blit(taureauimg, (taureau_x, taureau_y))  # Afficher l'image du Taureau
+
+        # Afficher l'horoscope du Taureau
+        font = pygame.font.SysFont("comicsansms", 20)
+        horoscope_text = ["Horoscope du jour :",
+                          "Faites attention aux mauvaises ondes qui peuvent vous attaquer",
+                          "elle pourrait vous rendre un peu trop severe,",
+                          "reflechissez bien avant d'utiliser votre stylo rouge ."]
+
+        
+        text_x = width_window - 800
+        text_y = 100
+
+        for line in horoscope_text:
+            message = font.render(line, True, WHITE)
+            window.blit(message, (text_x, text_y))  # Afficher le texte
+            text_y += 40  # Espacer les lignes de texte
+    
+    def afficher_ambiance_taureau(window):
+        # arreire plnan
+        window.fill((34, 139, 34)) 
+
+        # Dessiner un sol (un champ)
+        pygame.draw.rect(window, (139, 69, 19), (0, height_window - 100, width_window, 100))  # sol
+        
+        for i in range(50):  # herbe
+            x = random.randint(0, width_window)
+            y = random.randint(height_window - 80, height_window - 40)
+            pygame.draw.line(window, (34, 139, 34), (x, y), (x, y - random.randint(10, 30)), 2)
+        
+        # ajouter roches
+        for i in range(5):  # Placer quelques roches sur le sol
+            x = random.randint(0, width_window)
+            y = height_window - 80
+            pygame.draw.circle(window, (169, 169, 169), (x, y), random.randint(10, 30))  # Rocher gris
+        
+        # fleurs
+        for i in range(10):
+            x = random.randint(0, width_window)
+            y = random.randint(height_window - 100, height_window - 60)
+            pygame.draw.circle(window, (255, 105, 180), (x, y), 5)  #  fleur rose
+            
+    def animation_poussée_plante():
+        plante_x, plante_y = 300, 300
+        for i in range(10):
+            pygame.draw.circle(window, (34, 139, 34), (plante_x, plante_y), i)  # Plante qui pousse
+            pygame.display.update()
+            pygame.time.delay(800)
+    
+    def appliquer_immersion_taureau(window):
+        # Changer l'ambiance visuelle
+        afficher_ambiance_taureau(window)
+        afficher_taureau_horoscope(window)
+
+
+        # Afficher un message de bienvenue
+        font = pygame.font.SysFont("comicsansms", 21)
+        message = font.render("Votre signe astrologique est le taureau", True, WHITE)
+        window.blit(message, (80, 80))
+
+        # Animer la croissance des plantes ou autres effets visuels
+        animation_poussée_plante()
+
+    
+    def afficher_balance_horoscope(window):
+
+        # Afficher l'horoscope du Taureau
+        font = pygame.font.SysFont("comicsansms", 20)
+        horoscope_text = ["Horoscope du jour :",
+        "La journée s'annonce pleine de détermination.",
+        "Vous serez particulièrement réceptif aux opportunités financières.",
+        "Restez calme et concentrez-vous sur vos objectifs."]
+
+        
+        text_x = width_window - 800
+        text_y = 100
+
+        for line in horoscope_text:
+            message = font.render(line, True, WHITE)
+            window.blit(message, (text_x, text_y))  # Afficher le texte
+            text_y += 40  # Espacer les lignes de texte
+    
+    def afficher_ambiance_balance(window):
+        window.fill(BLUE_SKY)
+        
+        # sol
+        pygame.draw.rect(window, GREEN, (0, height_window - 100, width_window, 100))  # sol
+        
+        # nuages
+        for i in range(3):
+            x = random.randint(0, width_window)
+            y = random.randint(50, 200)
+            pygame.draw.ellipse(window, (211, 211, 211), (x, y, random.randint(60, 100), random.randint(20, 40)))  # nuage
+
+        # fleurs
+        for i in range(10):
+            x = random.randint(0, width_window)
+            y = random.randint(height_window - 100, height_window - 60)
+            pygame.draw.circle(window, (255, 105, 180), (x, y), 5)  # Fleur rose
+        
+        #feuilles
+        for i in range(20):
+            x = random.randint(0, width_window)
+            y = random.randint(50, height_window - 150)
+            pygame.draw.circle(window, (34, 139, 34), (x, y), random.randint(2, 6))
+
+    def afficher_balance(window):
+        # Afficher l'image de la Balance au centre du sol
+        x = width_window // 2 - balance_image.get_width() // 2 
+        y = height_window - balance_image.get_height()
+
+        window.blit(balance_image, (x, y))  # Afficher l'image de la Balance
+        
+        pygame.display.update()
+        pygame.time.delay(10000)
+
+    
+    def appliquer_immersion_balance(window):
+        afficher_ambiance_balance(window)
+        afficher_balance_horoscope(window)
+
+        # imgbalance
+        afficher_balance(window)
+
+        font = pygame.font.SysFont("comicsansms", 22)
+        message = font.render("Votre signe astrologique est la Balance", True, BLACK)
+        window.blit(message, (80, 80))
+        
+        
+    def afficher_poisson_horoscope(window):
+        # horoscope poiosson
+        font = pygame.font.SysFont("comicsansms", 20)
+        horoscope_text = [
+            "Horoscope du jour :",
+            "Les Poissons sont pleins d'empathie aujourd'hui.",
+            "Faites attention aux émotions des autres.",
+            "Le rêve et l'intuition seront vos alliés.",
+            "Profitez de l'instant présent."
+        ]
+        
+        text_x = 50
+        text_y = 100
+
+        for line in horoscope_text:
+            message = font.render(line, True, WHITE)
+            window.blit(message, (text_x, text_y))  # Afficher le texte
+            text_y += 40  # Espacer les lignes de texte
+
+    # ambiance poisson
+    def afficher_ambiance_poisson(window):
+
+        window.fill(BLUE_SKY)
+        
+        # Dessiner un sol aquatique (représenter un fond marin)
+        pygame.draw.rect(window, GREEN, (0, height_window - 100, width_window, 100))  # Sol
+        
+        # Ajouter des poissons, algues et effets aquatiques
+        for i in range(10):
+            x = random.randint(0, width_window)
+            y = random.randint(0, height_window - 150)
+            pygame.draw.circle(window, (BLUE), (x, y), random.randint(5, 15)) 
+            
+        # bulles
+        for i in range(5):
+            x = random.randint(0, width_window)
+            y = random.randint(0, height_window - 100)
+            pygame.draw.circle(window, (173, 216, 230), (x, y), random.randint(10, 20))  # Bulles d'eau
+
+    # Fonction pour afficher l'image du Poisson
+    def afficher_poisson(window):
+        # Afficher l'image du Poisson sur le sol (centré)
+        x = width_window // 2 - poisson_image.get_width() // 2
+        y = height_window - poisson_image.get_height() - 200  
+        window.blit(poisson_image, (x, y))  # Afficher l'image du Poisson
+        
+        pygame.display.update()
+        pygame.time.delay(10000)  # image pdt 6 secondes
+
+    def appliquer_immersion_poisson(window):
+        afficher_ambiance_poisson(window)
+        
+        # horoscope
+        afficher_poisson_horoscope(window)
+        
+        # img poisson
+        afficher_poisson(window)
+
+        font = pygame.font.SysFont("comicsansms", 22)
+        message = font.render("Votre signe astrologique est le Poisson", True, BLACK)
+        window.blit(message, (80, 80))
+
+
     # Boucle du jeu
     en_cours = True
     zoom_factor = 1
@@ -841,6 +1049,7 @@ def main():
 
                 if bouton_augmenter_vitesse.collidepoint(event.pos):
                     FPS+=100
+                    print("FPS augmenté :", FPS)
 
                 if bouton_diminuer_vitesse.collidepoint(event.pos):
                     FPS=max(1, FPS - 10)
@@ -898,10 +1107,19 @@ def main():
                                 
                                 # Calcul du signe astrologique
                                 signe = defsigne(datetime(annee, mois, jour))
+                                
+                                if signe == "Taureau":
+                                    appliquer_immersion_taureau(window)
+                                    
+                                if signe == "Balance":
+                                    appliquer_immersion_balance(window)
+
+                                if signe == "Poissons":
+                                    appliquer_immersion_poisson(window)
 
                                 # Charge l'image du signe astrologique
-                                image_signe = pygame.image.load(f"projet NSI ter/luneter/{signe}.png")
-                                image_signe = pygame.transform.scale(image_signe, (110, 110))  # Redimensionner l'image
+                                image_signe = pygame.image.load(f"{signe}.png")
+                                image_signe = pygame.transform.scale(image_signe, (100, 100))  
 
                                 # Réinitialiser la saisie de texte
                                 texte = ''  # Vide le champ de texte
@@ -963,7 +1181,6 @@ def main():
             
         else:
         # Affiche la vue normale
-
             window.blit(surface_solaire, (0, 0))
             dessiner_anneaux_saturne(window, saturne)
         
@@ -1016,12 +1233,10 @@ def main():
         bouton_prec.dessiner(window)
         bouton_suiv.dessiner(window)
         
-        
         # afficher titre musique en cours
         font = pygame.font.SysFont("comicsansms", 20)
-        titre_musique = font.render(liste_musiques[index_musique].split("projet NSI ter/luneter/")[-1].replace("projet NSI ter/luneter/", ""), True, WHITE)
+        titre_musique = font.render(liste_musiques[index_musique], True, WHITE)
         window.blit(titre_musique, (width_window - 320 , height_window - 140))
-
         
         boutonEruption.dessiner(window)
         boutonMeteorite.dessiner(window)
@@ -1038,15 +1253,16 @@ def main():
         if image_signe:
             pygame.draw.rect(window, (255, 255, 255), (95, height_window - 160, 118, 118))  # fond blanc
             window.blit(image_signe, (100, height_window - 150))
-       
-         # Mettre à jour l'affichage
+
+
+        # Mettre à jour l'affichage
         pygame.display.update()
 
     
         pygame.time.Clock().tick(FPS)
 
-
     pygame.quit()
 
 # Lancer le programme
 main()
+
